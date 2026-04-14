@@ -626,13 +626,14 @@
             participantes.
           </p>
           <div class="landing-solution__cta-final-action">
-            <a class="btn" href="#" data-sales-contact="" aria-label="Abrir WhatsApp para agendar demonstração">
+            <button type="button" class="btn" data-lead-demo
+              aria-label="Agendar demonstração — abrir formulário rápido">
               <svg class="btn__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
                 <path
                   d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
               </svg>
               Agendar demonstração
-            </a>
+            </button>
           </div>
           <p class="landing-solution__cta-final-reassure">
             Sem compromisso. Apresentamos o sistema e entendemos sua realidade.
@@ -655,14 +656,138 @@
   </footer>
 
   <div class="landing-solution__demo-fab">
-    <a class="btn btn--sm" href="#" data-sales-contact="" aria-label="Abrir WhatsApp para agendar demonstração">
+    <button type="button" class="btn btn--sm" data-lead-demo
+      aria-label="Agendar demonstração — abrir formulário rápido">
       <svg class="btn__icon" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
         <path
           d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
       </svg>
       Agendar demonstração
-    </a>
+    </button>
   </div>
+
+  <dialog class="lead-demo-dialog" id="lead-demo-dialog" aria-labelledby="lead-demo-title">
+    <div class="lead-demo-dialog__inner">
+      <header class="lead-demo-dialog__head">
+        <h2 id="lead-demo-title" class="lead-demo-dialog__title">Agendar demonstração</h2>
+        <button type="button" class="lead-demo-dialog__close" id="lead-demo-close" aria-label="Fechar">&times;</button>
+      </header>
+      <p class="lead-demo-dialog__lead">Em poucos toques você envia os dados e abrimos a conversa no WhatsApp.</p>
+      <p class="lead-demo-dialog__step-label" id="lead-demo-step-label" aria-live="polite">Passo 1 de 5</p>
+      <div class="lead-demo-dialog__dots" id="lead-demo-dots" aria-hidden="true"></div>
+
+      <form id="lead-demo-form" class="lead-demo-form" novalidate>
+        <div class="lead-demo__panel is-active" data-step="1" role="group" aria-labelledby="lead-demo-step-1-title">
+          <h3 id="lead-demo-step-1-title" class="lead-demo__question">Seus dados</h3>
+          <label class="lead-demo__field">
+            <span class="lead-demo__label">Nome</span>
+            <input class="lead-demo__input" type="text" name="nome" id="lead-nome" autocomplete="name" required
+              minlength="2" maxlength="120" placeholder="Como podemos te chamar" />
+          </label>
+          <label class="lead-demo__field">
+            <span class="lead-demo__label">WhatsApp</span>
+            <input class="lead-demo__input" type="tel" name="whatsapp" id="lead-whatsapp" autocomplete="tel" required
+              inputmode="numeric" placeholder="(00) 00000-0000" maxlength="19" />
+          </label>
+        </div>
+
+        <div class="lead-demo__panel" data-step="2" role="group" aria-labelledby="lead-demo-step-2a">
+          <h3 id="lead-demo-step-2a" class="lead-demo__question">Quantos trabalhos por mês?</h3>
+          <div class="lead-demo__chips" role="radiogroup" aria-labelledby="lead-demo-step-2a">
+            <label class="lead-demo__chip"><input type="radio" name="trabalhos" value="1" required />1</label>
+            <label class="lead-demo__chip"><input type="radio" name="trabalhos" value="2" />2</label>
+            <label class="lead-demo__chip"><input type="radio" name="trabalhos" value="3" />3</label>
+            <label class="lead-demo__chip"><input type="radio" name="trabalhos" value="4+" />4+</label>
+          </div>
+          <h3 id="lead-demo-step-2b" class="lead-demo__question lead-demo__question--spaced">Pessoas por trabalho?</h3>
+          <div class="lead-demo__chips" role="radiogroup" aria-labelledby="lead-demo-step-2b">
+            <label class="lead-demo__chip"><input type="radio" name="pessoas" value="Até 20" required />Até 20</label>
+            <label class="lead-demo__chip"><input type="radio" name="pessoas" value="20–40" />20–40</label>
+            <label class="lead-demo__chip"><input type="radio" name="pessoas" value="40–80" />40–80</label>
+            <label class="lead-demo__chip"><input type="radio" name="pessoas" value="80+" />80+</label>
+          </div>
+        </div>
+
+        <div class="lead-demo__panel" data-step="3" role="group" aria-labelledby="lead-demo-step-3a">
+          <h3 id="lead-demo-step-3a" class="lead-demo__question">Vocês possuem participantes mensalistas?</h3>
+          <div class="lead-demo__chips lead-demo__chips--2" role="radiogroup" aria-labelledby="lead-demo-step-3a">
+            <label class="lead-demo__chip"><input type="radio" name="mensalistas" value="Sim" required />Sim</label>
+            <label class="lead-demo__chip"><input type="radio" name="mensalistas" value="Não" />Não</label>
+          </div>
+          <div id="lead-mensalistas-qtd-wrap" class="lead-demo__mensalistas-qtd" aria-hidden="true" inert>
+            <div class="lead-demo__mensalistas-qtd-inner">
+              <p id="lead-mensalistas-hint" class="lead-demo__hint lead-demo__hint--mensalistas">Mensalistas participam
+                com frequência e ajudam a organizar melhor a casa.</p>
+              <h3 id="lead-mensalistas-qtd-legend" class="lead-demo__question lead-demo__question--spaced">Quantos
+                mensalistas?</h3>
+              <div class="lead-demo__chips" role="radiogroup" aria-labelledby="lead-mensalistas-qtd-legend">
+                <label class="lead-demo__chip"><input type="radio" name="mensalistas_qtd" value="Até 10" />Até
+                  10</label>
+                <label class="lead-demo__chip"><input type="radio" name="mensalistas_qtd" value="10–30" />10–30</label>
+                <label class="lead-demo__chip"><input type="radio" name="mensalistas_qtd" value="30–60" />30–60</label>
+                <label class="lead-demo__chip"><input type="radio" name="mensalistas_qtd" value="60+" />60+</label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="lead-demo__panel" data-step="4" role="group"
+          aria-labelledby="lead-demo-step-4-title lead-demo-step-4-hint">
+          <h3 id="lead-demo-step-4-title" class="lead-demo__question">Hoje vocês usam:</h3>
+          <p id="lead-demo-step-4-hint" class="lead-demo__hint">Pode marcar mais de uma opção.</p>
+          <div class="lead-demo__chips lead-demo__chips--stack" role="group" aria-label="Ferramentas usadas hoje">
+            <label class="lead-demo__chip"><input type="checkbox" name="contexto" value="WhatsApp" />WhatsApp</label>
+            <label class="lead-demo__chip"><input type="checkbox" name="contexto" value="Planilha" />Planilha</label>
+            <label class="lead-demo__chip"><input type="checkbox" name="contexto" value="Papel" />Papel</label>
+            <label class="lead-demo__chip"><input type="checkbox" name="contexto" value="Google Forms" />Google
+              Forms</label>
+            <label class="lead-demo__chip"><input type="checkbox" name="contexto" value="Outro" />Outro</label>
+          </div>
+        </div>
+
+        <div class="lead-demo__panel" data-step="5" role="group" aria-labelledby="lead-demo-step-5-title">
+          <h3 id="lead-demo-step-5-title" class="lead-demo__question">
+            Valores para o plano <span class="lead-demo__optional-badge">opcional</span>
+          </h3>
+          <p class="lead-demo__hint lead-demo__hint--tight">Pode pular: usamos só para sugerir um plano alinhado à sua casa.</p>
+
+          <label class="lead-demo__field">
+            <span class="lead-demo__label">Qual o valor médio cobrado por participante?</span>
+            <select class="lead-demo__select" name="valor_participante" id="lead-valor-participante">
+              <option value="">Prefiro não informar</option>
+              <option value="Até R$30">Até R$30</option>
+              <option value="R$30 – R$60">R$30 – R$60</option>
+              <option value="R$60 – R$100">R$60 – R$100</option>
+              <option value="Mais de R$100">Mais de R$100</option>
+            </select>
+            <span class="lead-demo__helper">Usamos isso apenas para sugerir um plano adequado à realidade da sua casa.</span>
+          </label>
+
+          <div id="lead-valor-mensalista-wrap" class="lead-demo__valor-mensalista-wrap is-hidden" aria-hidden="true"
+            inert>
+            <label class="lead-demo__field lead-demo__field--spaced">
+              <span class="lead-demo__label">Mensalistas contribuem com qual valor? <span
+                  class="lead-demo__optional-inline">(opcional)</span></span>
+              <select class="lead-demo__select" name="valor_mensalista" id="lead-valor-mensalista">
+                <option value="">Prefiro não informar</option>
+                <option value="Até R$50">Até R$50</option>
+                <option value="R$50 – R$100">R$50 – R$100</option>
+                <option value="R$100 – R$200">R$100 – R$200</option>
+                <option value="Mais de R$200">Mais de R$200</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <p class="lead-demo__error" id="lead-demo-error" role="alert" hidden></p>
+
+        <footer class="lead-demo-dialog__footer">
+          <button type="button" class="lead-demo__btn lead-demo__btn--ghost" id="lead-demo-back">Voltar</button>
+          <button type="button" class="lead-demo__btn lead-demo__btn--primary" id="lead-demo-next">Continuar</button>
+        </footer>
+      </form>
+    </div>
+  </dialog>
 
   <script src="./script.js" defer></script>
 </body>
