@@ -876,57 +876,6 @@ body {
   }
 }
 
-.plan-card__economia {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  margin-top: 0.75rem;
-  padding: 0.65rem 0.75rem;
-  background: rgba(107, 207, 142, 0.09);
-  border: 1px solid rgba(107, 207, 142, 0.35);
-  border-radius: 10px;
-}
-
-.plan-card__economia.bonus {
-  padding: 8px 0.75rem;
-  background: #064e3b;
-  border-color: rgba(110, 231, 183, 0.35);
-}
-
-.plan-card__economia-label {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--success);
-}
-
-.plan-card__economia.bonus .plan-card__economia-label {
-  color: #6ee7b7;
-}
-
-.plan-card__economia-value {
-  font-size: 1.35rem;
-  font-weight: 700;
-  letter-spacing: -0.02em;
-  color: var(--success);
-  font-variant-numeric: tabular-nums;
-}
-
-.plan-card__economia.bonus .plan-card__economia-value {
-  color: #6ee7b7;
-}
-
-.plan-card__economia-hint {
-  font-size: 0.72rem;
-  line-height: 1.4;
-  color: var(--muted);
-}
-
-.plan-card__economia.bonus .plan-card__economia-hint {
-  color: rgba(110, 231, 183, 0.8);
-}
-
 /* —— Bônus no card (cliente) —— */
 .plan-card__gift {
   margin: 0.75rem 0 0;
@@ -959,8 +908,14 @@ body {
   color: var(--muted);
 }
 
-.plan-card__gift-sub:first-of-type {
-  margin-top: 0;
+.plan-card__gift-sub--plus {
+  margin: 0.6rem 0 0.3rem;
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  line-height: 1.45;
+  text-transform: none;
+  color: var(--muted);
 }
 
 .plan-card__gift-list {
@@ -980,6 +935,23 @@ body {
 .plan-card__gift-item--compact {
   font-size: 0.78rem;
   color: var(--muted);
+}
+
+.plan-card__gift-item--plus {
+  font-size: 0.8rem;
+  color: var(--text);
+}
+
+.plan-card__gift-item-ref {
+  font-size: 0.72em;
+  font-weight: 400;
+  color: var(--muted);
+  opacity: 0.88;
+  white-space: nowrap;
+}
+
+.plan-card__gift-list--plus {
+  margin-top: 0.05rem;
 }
 
 .plan-card__warn {

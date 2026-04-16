@@ -71,7 +71,7 @@ function getPlanoCTA(plano) {
 
 const getCTA = getPlanoCTA;
 
-/** Features base (cards + “Gerar proposta” quando há módulos Plus). */
+/** Itens fixos em “Na prática, você terá:”; Plus entram abaixo quando marcados na configuração. */
 const BASE_FEATURES = [
   'Redução de risco jurídico',
   'Clareza total da sua operação',
@@ -368,11 +368,6 @@ function somaValorBonus(ids) {
   return calcularBonus(ids);
 }
 
-/** Labels para o cliente (sem preços). */
-function labelsPlusCliente(ids) {
-  return PLUS_ORDER.filter((id) => ids.includes(id)).map((id) => PLUS_CATALOG[id].clientLabel);
-}
-
 function getInputs() {
   const trabalhos = Math.max(0, Number(document.getElementById('trabalhos').value) || 0);
   const pessoasPorTrabalho = Math.max(
@@ -520,8 +515,6 @@ function renderCards() {
   });
   const receita = receitaParaPercentual(receitaDet);
   const plusIds = getSelectedPlusIds();
-  const plusLabelsCliente = labelsPlusCliente(plusIds);
-  const economiaMensal = somaValorBonus(plusIds);
 
   document.getElementById('participantes-total').textContent = String(participantes);
 
@@ -610,8 +603,7 @@ function renderCards() {
   root.append(
     ...sorted.map((item) =>
       createCard(item, participantes, mensalistas, {
-        plusLabelsCliente,
-        economiaMensal,
+        plusIds,
         receita,
         totalPresencasMes: participantes,
       }),
@@ -620,12 +612,7 @@ function renderCards() {
 }
 
 function createCard({ plan, role }, participantes, mensalistas, giftUi) {
-  const {
-    plusLabelsCliente = [],
-    economiaMensal = 0,
-    receita,
-    totalPresencasMes = 0,
-  } = giftUi || {};
+  const { plusIds = [], receita, totalPresencasMes = 0 } = giftUi || {};
   const article = document.createElement('article');
   article.className = 'plan-card';
   if (role === 'recommended') article.classList.add('plan-card--recommended');
@@ -685,7 +672,7 @@ function createCard({ plan, role }, participantes, mensalistas, giftUi) {
   }
 
   if (!insufficient) {
-    article.appendChild(createGiftSection(plusLabelsCliente));
+    article.appendChild(createGiftSection(plusIds));
   }
 
   const priceWrap = document.createElement('div');
@@ -751,29 +738,6 @@ function createCard({ plan, role }, participantes, mensalistas, giftUi) {
     if (resumo) article.appendChild(resumo);
   }
 
-  if (!insufficient && economiaMensal > 0) {
-    const eco = document.createElement('div');
-    eco.className = 'plan-card__economia bonus';
-    eco.setAttribute('role', 'status');
-
-    const ecoLabel = document.createElement('span');
-    ecoLabel.className = 'plan-card__economia-label';
-    ecoLabel.textContent = '🎁 Benefícios incluídos';
-
-    const ecoVal = document.createElement('span');
-    ecoVal.className = 'plan-card__economia-value';
-    ecoVal.textContent = `${fmt.format(economiaMensal)}/mês`;
-
-    const ecoHint = document.createElement('span');
-    ecoHint.className = 'plan-card__economia-hint';
-    ecoHint.textContent = 'Soma dos módulos Plus selecionados na configuração (valor percebido).';
-
-    eco.appendChild(ecoLabel);
-    eco.appendChild(ecoVal);
-    eco.appendChild(ecoHint);
-    article.appendChild(eco);
-  }
-
   if (insufficient) {
     const w = document.createElement('p');
     w.className = 'plan-card__warn';
@@ -796,7 +760,7 @@ function createCard({ plan, role }, participantes, mensalistas, giftUi) {
   return article;
 }
 
-function createGiftSection(plusLabelsCliente) {
+function createGiftSection(plusIds) {
   const wrap = document.createElement('div');
   wrap.className = 'plan-card__gift';
 
@@ -816,17 +780,25 @@ function createGiftSection(plusLabelsCliente) {
   wrap.appendChild(badge);
   wrap.appendChild(listBase);
 
-  if (plusLabelsCliente.length > 0) {
+  const orderedPlus = PLUS_ORDER.filter((id) => plusIds.includes(id) && PLUS_CATALOG[id]);
+
+  if (orderedPlus.length > 0) {
     const subPlus = document.createElement('p');
-    subPlus.className = 'plan-card__gift-sub';
-    subPlus.textContent = 'Módulos Plus';
+    subPlus.className = 'plan-card__gift-sub plan-card__gift-sub--plus';
+    const totalPercebido = somaValorBonus(orderedPlus);
+    subPlus.textContent = `Módulos Plus inclusos (valor percebido ~${fmt.format(totalPercebido)}/mês):`;
 
     const listPlus = document.createElement('ul');
-    listPlus.className = 'plan-card__gift-list';
-    plusLabelsCliente.forEach((label) => {
+    listPlus.className = 'plan-card__gift-list plan-card__gift-list--plus';
+    orderedPlus.forEach((id) => {
+      const entry = PLUS_CATALOG[id];
       const li = document.createElement('li');
-      li.className = 'plan-card__gift-item';
-      li.textContent = `✔ ${label}`;
+      li.className = 'plan-card__gift-item plan-card__gift-item--plus';
+      li.appendChild(document.createTextNode(`✔ ${entry.clientLabel}\u00a0`));
+      const ref = document.createElement('span');
+      ref.className = 'plan-card__gift-item-ref';
+      ref.textContent = `(${fmt.format(entry.valor)})`;
+      li.appendChild(ref);
       listPlus.appendChild(li);
     });
     wrap.appendChild(subPlus);
