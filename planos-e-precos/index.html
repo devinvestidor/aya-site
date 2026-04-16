@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Planos e preços — Simulador</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+
+<body>
+  <div class="page">
+    <header class="header">
+      <p class="header__eyebrow">Simulador comercial</p>
+      <h1 class="header__title">Planos e preços</h1>
+    </header>
+
+    <section class="propostas-topo" aria-label="Propostas salvas">
+      <div class="propostas-topo__row">
+        <label class="propostas-topo__label" for="propostas-select">Propostas salvas</label>
+        <select id="propostas-select" class="propostas-topo__select">
+          <option value="">Nenhuma proposta salva</option>
+        </select>
+        <button type="button" id="btn-excluir-proposta"
+          class="propostas-topo__btn propostas-topo__btn--danger propostas-topo__btn--small" hidden>Excluir</button>
+        <button type="button" id="btn-nova-proposta"
+          class="propostas-topo__btn propostas-topo__btn--ghost">Nova</button>
+      </div>
+      <p id="proposta-atual-info" class="propostas-topo__meta">Nenhuma proposta ativa.</p>
+    </section>
+
+    <section class="panel" aria-labelledby="config-heading">
+      <h2 id="config-heading" class="panel__title">Configuração</h2>
+      <div class="grid-inputs">
+        <label class="field">
+          <span class="field__label">Trabalhos por mês</span>
+          <input type="number" id="trabalhos" class="field__input" min="0" step="1" value="" inputmode="numeric"
+            placeholder="Ex.: 2" />
+        </label>
+        <label class="field">
+          <span class="field__label">Valor mínimo participante</span>
+          <input type="text" id="valor-participante-min" class="field__input" value="" inputmode="numeric"
+            placeholder="Ex.: 20" autocomplete="off" />
+        </label>
+        <label class="field">
+          <span class="field__label">Valor máximo participante</span>
+          <input type="text" id="valor-participante-max" class="field__input" value="" inputmode="numeric"
+            placeholder="Ex.: 50" autocomplete="off" />
+        </label>
+        <label class="field field--pessoas-total">
+          <span class="field__label">Média de pessoas por trabalho</span>
+          <input type="number" id="pessoas-por-trabalho" class="field__input" min="0" step="1" value=""
+            placeholder="Ex.: 60" inputmode="numeric" />
+        </label>
+        <label class="field">
+          <span class="field__label">Quantidade mensalistas</span>
+          <input type="number" id="mensalistas-qtd" class="field__input" min="0" max="500" step="1" value=""
+            placeholder="Ex.: 30" inputmode="numeric" />
+        </label>
+        <label class="field">
+          <span class="field__label">Valor pago mensalista (mês)</span>
+          <input type="text" id="valor-mensalista" class="field__input" value="" inputmode="numeric"
+            placeholder="Ex.: 150" autocomplete="off" />
+        </label>
+        <label class="field">
+          <div class="label-with-help">
+            <span class="field__label">Média presença mensalista</span>
+            <span class="help-icon" aria-label="Taxa de presença dos mensalistas"
+              data-tooltip="Mensalistas não participam de todos os eventos.&#10;Usamos taxa de presença para estimar média.">?</span>
+          </div>
+          <input type="text" id="taxaPresenca" class="field__input" value="70%" inputmode="numeric" autocomplete="off"
+            placeholder="Ex.: 70%" />
+        </label>
+        <div class="field field--demais-right">
+          <div class="label-with-help">
+            <span class="field__label">Participantes por trabalho</span>
+            <span class="help-icon" aria-label="Explicação do cálculo de não mensalistas"
+              data-tooltip="Calculado como:&#10;Média de pessoas por trabalho&#10;menos mensalistas presentes.&#10;&#10;Mensalistas presentes = arredondamento para cima de (mensalistas × taxa de presença).">?</span>
+          </div>
+          <div class="field__demais-strip" role="status">
+            <strong id="demais-participantes-por-trabalho" class="field__demais-strip-value">0</strong>
+            <span id="demais-participantes-formula" class="field__demais-strip-hint">0 − 0 (70%)</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="summary" aria-live="polite">
+      <p class="summary__line">
+        <span class="summary__icon" aria-hidden="true">◎</span>
+        Você terá aproximadamente
+        <strong id="participantes-total">100</strong>
+        presenças/mês
+        <span class="summary__inline-hint">(trabalhos × pessoas por trabalho)</span>
+      </p>
+      <p class="summary__line summary__line--muted">
+        Inclui até <strong id="mensalistas-limite-rec">—</strong> mensalistas no plano indicado.
+      </p>
+      <p class="summary__line summary__line--muted summary__line--fine">
+        Acima disso, valor proporcional ao crescimento da casa — a simulação usa a faixa de cada plano.
+      </p>
+      <p class="summary__line summary__line--muted summary__line--fine">
+        Mensalistas participam em média de <strong id="summary-taxa-presenca-display">70</strong>% dos trabalhos —
+        usamos isso para estimar quantos entram na média de pessoas por evento ao calcular a receita de participantes.
+      </p>
+      <p id="summary-mensalistas-alerta" class="summary__line summary__line--alert" hidden></p>
+      <div class="summary__receita-split" role="group" aria-label="Receita estimada no mês">
+        <div class="summary__receita-item">
+          <span aria-hidden="true">💰</span> Mensalistas: <strong id="receita-mensalistas">—</strong>
+        </div>
+        <div class="summary__receita-item">
+          <span aria-hidden="true">🎟</span> Participantes: <strong id="receita-participantes">—</strong>
+          <span id="receita-participantes-faixa" class="summary__receita-sub" hidden></span>
+        </div>
+        <div class="summary__receita-item summary__receita-item--total">
+          <span aria-hidden="true">💥</span> Total: <strong id="receita-total">—</strong>
+          <span id="receita-total-faixa" class="summary__receita-sub" hidden></span>
+        </div>
+      </div>
+      <p class="summary__line summary__line--receita">
+        <span class="summary__icon" aria-hidden="true">◈</span>
+        Faixa total (ticket min./máx. nos participantes):
+        <strong id="receita-range">—</strong>
+        <span class="summary__receita-hint">Mensalistas: qtd × valor/mês. Participantes: trabalhos × não-mensalistas ×
+          valor (média ou faixa).</span>
+      </p>
+    </section>
+
+    <details class="brinde-accordion">
+      <summary class="brinde-accordion__summary">
+        <span aria-hidden="true">💥</span> Extras para sua operação
+      </summary>
+      <div class="config-plus" aria-labelledby="brinde-heading">
+        <p id="brinde-heading" class="config-plus__hint">
+          Recursos de alto valor percebido para fortalecer sua proposta e reduzir objeções na negociação.
+        </p>
+        <ul class="plus-list plus-list--config" role="list">
+          <li class="plus-list__item">
+            <label class="plus-list__label">
+              <input type="checkbox" class="plus-list__input" data-plus-id="relatorios_custom" />
+              <span>Relatórios customizados
+                <span class="plus-list__internal">(valor R$ 120 — interno)</span></span>
+            </label>
+          </li>
+          <li class="plus-list__item">
+            <label class="plus-list__label">
+              <input type="checkbox" class="plus-list__input" data-plus-id="dashboards_avancados" />
+              <span>Dashboards avançados
+                <span class="plus-list__internal">(valor R$ 80 — interno)</span></span>
+            </label>
+          </li>
+          <li class="plus-list__item">
+            <label class="plus-list__label">
+              <input type="checkbox" class="plus-list__input" data-plus-id="anamnese_ia" />
+              <span>Análise de anamnese com IA
+                <span class="plus-list__internal">(valor R$ 150 — interno)</span></span>
+            </label>
+          </li>
+        </ul>
+      </div>
+    </details>
+
+    <section class="cards" id="cards-root" aria-label="Comparação de planos"></section>
+
+    <div class="proposta-bar">
+      <button type="button" class="btn-proposta" id="btn-salvar-proposta">Salvar proposta</button>
+    </div>
+
+    <div class="modal-backdrop" id="modal-salvar-proposta" aria-hidden="true">
+      <div class="modal">
+        <h3 class="modal__title">Salvar proposta</h3>
+        <p class="modal__text">Informe o nome do cliente para salvar esta proposta.</p>
+        <label class="field">
+          <span class="field__label">Nome do cliente</span>
+          <input type="text" id="input-nome-cliente" class="field__input" placeholder="Ex.: Casa Aurora" />
+        </label>
+        <div class="modal__actions">
+          <button type="button" class="propostas-topo__btn propostas-topo__btn--ghost"
+            id="btn-cancelar-salvar">Cancelar</button>
+          <button type="button" class="propostas-topo__btn" id="btn-confirmar-salvar">Salvar</button>
+        </div>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <p>
+        Valores base conforme tabela interna. Receita estimada separa mensalistas (valor mensal informado) e
+        participantes não mensalistas (ticket min./máx.), com taxa de presença dos mensalistas configurável (padrão
+        70%; presentes por evento = arredondamento para cima). Presenças/mês = trabalhos × média de pessoas por trabalho. Mensalistas: faixa
+        incluída por plano e ajuste proporcional acima.
+        Extras para sua operação não alteram o preço do plano; o console registra o valor percebido para o vendedor.
+      </p>
+    </footer>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+
+</html>
