@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Facebook + WhatsApp
+User-agent: facebookexternalhit
+Allow: /
+
+User-agent: Facebot
+Allow: /
+
+# LinkedIn
+User-agent: LinkedInBot
+Allow: /
+
+# Twitter
+User-agent: Twitterbot
+Allow: /
