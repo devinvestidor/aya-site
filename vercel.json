@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/planos-e-precos",
+      "destination": "/planos-e-precos/",
+      "permanent": true
+    }
+  ]
+}
