@@ -4,6 +4,16 @@
       "source": "/planos-e-precos",
       "destination": "/planos-e-precos/",
       "permanent": true
+    },
+    {
+      "source": "/casas-ayahuasca",
+      "destination": "/casas-ayahuasca/",
+      "permanent": true
+    },
+    {
+      "source": "/eventos-conscientes",
+      "destination": "/eventos-conscientes/",
+      "permanent": true
     }
   ]
 }

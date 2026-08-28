@@ -165,9 +165,16 @@
     return one ? [one] : [];
   }
 
+  function getOrigemLabel(value) {
+    if (value === 'eventos-conscientes') return 'Eventos conscientes';
+    if (value === 'ayahuasca') return 'Casas de Ayahuasca';
+    return String(value || '').trim();
+  }
+
   function buildLeadMessage(fd) {
     var nome = (fd.get('nome') || '').trim();
     var whats = formatWhatsAppFieldValue(fd.get('whatsapp') || '');
+    var origem = getOrigemLabel(fd.get('origem') || '');
     var trabalhos = fd.get('trabalhos') || '';
     var pessoas = fd.get('pessoas') || '';
     var mensalistas = fd.get('mensalistas') || '';
@@ -181,6 +188,7 @@
       '',
       '*Nome:* ' + nome,
       '*WhatsApp:* ' + whats,
+      '*Interesse:* ' + (origem || 'Não informado'),
       '',
       '*Trabalhos/mês:* ' + trabalhos,
       '*Pessoas por trabalho:* ' + pessoas,
@@ -338,8 +346,15 @@
       }
     }
 
+    function applyDefaultOrigem() {
+      var key = (root.getAttribute('data-lead-origem') || '').trim();
+      var input = document.getElementById('lead-origem');
+      if (input) input.value = key;
+    }
+
     function resetLeadForm() {
       form.reset();
+      applyDefaultOrigem();
       updateMensalistasQtyVisibility();
       setStep(1);
       showError('');
@@ -400,6 +415,7 @@
     function openLeadModal() {
       if (typeof dialog.showModal === 'function') {
         form.reset();
+        applyDefaultOrigem();
         updateMensalistasQtyVisibility();
         showError('');
         dialog.showModal();
