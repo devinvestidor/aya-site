@@ -131,37 +131,18 @@
       </p>
     </section>
 
-    <details class="brinde-accordion">
-      <summary class="brinde-accordion__summary">
-        <span aria-hidden="true">💥</span> Extras para sua operação
-      </summary>
-      <div class="config-plus" aria-labelledby="brinde-heading">
-
-        <ul class="plus-list plus-list--config" role="list">
-          <li class="plus-list__item">
-            <label class="plus-list__label">
-              <input type="checkbox" class="plus-list__input" data-plus-id="relatorios_custom" />
-              <span>Relatórios customizados
-                <span class="plus-list__internal">(valor R$ 120 — interno)</span></span>
-            </label>
-          </li>
-          <li class="plus-list__item">
-            <label class="plus-list__label">
-              <input type="checkbox" class="plus-list__input" data-plus-id="dashboards_avancados" />
-              <span>Dashboards avançados
-                <span class="plus-list__internal">(valor R$ 80 — interno)</span></span>
-            </label>
-          </li>
-          <li class="plus-list__item">
-            <label class="plus-list__label">
-              <input type="checkbox" class="plus-list__input" data-plus-id="anamnese_ia" />
-              <span>Análise de anamnese com IA
-                <span class="plus-list__internal">(valor R$ 150 — interno)</span></span>
-            </label>
-          </li>
-        </ul>
-      </div>
-    </details>
+    <label class="field plus-credits-field">
+      <span class="field__label">Créditos adicionais de artes IA</span>
+      <select id="creditos-artes-select" class="field__input">
+        <option value="">Sem créditos extras (5 inclusos)</option>
+        <option value="creditos_artes_10">+10 (15 no total) — uso ocasional — R$ 19</option>
+        <option value="creditos_artes_25">+25 (30 no total) — ~1 arte/dia — R$ 39</option>
+        <option value="creditos_artes_50">+50 (55 no total) — ~2 artes/dia — R$ 69</option>
+        <option value="creditos_artes_100">+100 (105 no total) — ~3 artes/dia — R$ 119</option>
+        <option value="creditos_artes_150">+150 (155 no total) — ~5 artes/dia — R$ 159</option>
+      </select>
+      <span class="field__hint">O plano já inclui 5 artes. Pacote extra (valor interno para o vendedor).</span>
+    </label>
 
     <section class="cards" id="cards-root" aria-label="Comparação de planos"></section>
 
@@ -192,7 +173,7 @@
         70%; presentes por evento = arredondamento para cima). Presenças/mês = trabalhos × média de pessoas por
         trabalho. Mensalistas: faixa
         incluída por plano e ajuste proporcional acima.
-        Extras para sua operação não alteram o preço do plano; o console registra o valor percebido para o vendedor.
+        Créditos adicionais de artes IA somam ao valor mensal simulado.
       </p>
     </footer>
   </div>

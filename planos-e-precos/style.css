@@ -191,113 +191,15 @@ body {
   color: var(--muted);
 }
 
-/* —— Módulos Plus (dentro da configuração) —— */
-.config-plus {
-  padding-top: 0.25rem;
-}
-
-.config-plus__title {
-  margin: 0 0 0.35rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.config-plus__hint {
-  margin: 0 0 0.75rem;
-  font-size: 0.78rem;
-  line-height: 1.45;
-  color: var(--muted);
-}
-
-.plus-list {
-  margin: 0;
-  padding: 0;
-  list-style: none;
-  display: grid;
-  gap: 0.5rem;
-}
-
-@media (min-width: 720px) {
-  .plus-list--config {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 0.5rem;
-  }
-}
-
-.plus-list__label {
+.plus-credits-field {
   display: flex;
-  align-items: flex-start;
-  gap: 0.6rem;
-  padding: 0.55rem 0.65rem;
-  font-size: 0.9rem;
-  line-height: 1.4;
-  color: var(--text);
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  cursor: pointer;
-  transition: border-color 0.2s;
-}
-
-.plus-list__label:hover {
-  border-color: rgba(196, 163, 90, 0.35);
-}
-
-.plus-list__input {
-  margin-top: 0.2rem;
-  accent-color: var(--accent);
-  flex-shrink: 0;
-}
-
-.plus-list__internal {
-  font-size: 0.75rem;
-  color: var(--muted);
-  font-weight: 500;
-}
-
-.brinde-accordion {
+  width: 100%;
   margin: -0.5rem 0 1.5rem;
-  padding: 0.9rem 1rem;
-  background: var(--bg-elevated);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
 }
 
-.brinde-accordion__summary {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--text);
+.plus-credits-field .field__input {
   cursor: pointer;
-  list-style: none;
 }
-
-.brinde-accordion__summary::-webkit-details-marker {
-  display: none;
-}
-
-.brinde-accordion__summary::after {
-  content: '▾';
-  margin-left: auto;
-  color: var(--muted);
-  transition: transform 0.2s ease;
-}
-
-.brinde-accordion[open] .brinde-accordion__summary::after {
-  transform: rotate(180deg);
-}
-
-.brinde-accordion .config-plus {
-  margin-top: 0.75rem;
-  padding-top: 0.75rem;
-  border-top: 1px solid var(--border);
-}
-
-/* —— Proposta —— */
 .proposta-bar {
   display: flex;
   justify-content: center;
@@ -355,19 +257,11 @@ body {
   .grid-inputs {
     grid-template-columns: repeat(2, 1fr);
   }
-
-  .config-plus {
-    grid-column: 1 / -1;
-  }
 }
 
 @media (min-width: 1024px) {
   .grid-inputs {
     grid-template-columns: repeat(4, 1fr);
-  }
-
-  .config-plus {
-    grid-column: 1 / -1;
   }
 }
 
@@ -828,6 +722,22 @@ body {
   margin-top: 4px;
   line-height: 1.35;
   color: var(--muted);
+}
+
+.price-extras-ia {
+  margin-top: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+  line-height: 1.35;
+}
+
+.price-license {
+  margin-top: 0.45rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  line-height: 1.35;
+  color: var(--accent);
 }
 
 .plan-card__price-value {

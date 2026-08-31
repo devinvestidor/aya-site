@@ -1,6 +1,6 @@
 /**
  * Simulador de planos — gestão de eventos (uso comercial).
- * Módulos Plus: valor percebido (soma interna) sem alterar o preço exibido no card.
+ * Créditos de artes IA somam ao valor mensal exibido no card.
  */
 
 /** Limite de mensalistas na faixa inclusa de cada plano (referência comercial). */
@@ -74,32 +74,44 @@ const getCTA = getPlanoCTA;
 /** Itens fixos em “Na prática, você terá:”; Plus entram abaixo quando marcados na configuração. */
 const BASE_FEATURES = [
   'Redução de risco jurídico',
-  'Clareza total da sua operação',
   'Cuidado com a saúde dos participantes',
+  'Assistente IA: dúvidas, medicamentos e artes para redes',
+  'PIX e cartão com baixa automática',
   'Presença digital profissional',
 ];
 
 /**
- * Módulos Plus (extras de fechamento). `valor` = valor percebido / referência interna (não cobrado no card).
+ * Extras de fechamento. `valor` = acréscimo mensal no card.
  */
 const PLUS_CATALOG = {
-  relatorios_custom: { clientLabel: 'Relatórios customizados', valor: 120 },
-  dashboards_avancados: { clientLabel: 'Dashboards avançados', valor: 80 },
-  anamnese_ia: { clientLabel: 'Análise de anamnese com IA', valor: 150 },
+  creditos_artes_10: { clientLabel: 'Créditos de artes IA +10 (15 no total)', valor: 19 },
+  creditos_artes_25: { clientLabel: 'Créditos de artes IA +25 (30 no total)', valor: 39 },
+  creditos_artes_50: { clientLabel: 'Créditos de artes IA +50 (55 no total)', valor: 69 },
+  creditos_artes_100: { clientLabel: 'Créditos de artes IA +100 (105 no total)', valor: 119 },
+  creditos_artes_150: { clientLabel: 'Créditos de artes IA +150 (155 no total)', valor: 159 },
 };
 
 /** Referência de bônus (mesmos valores que PLUS_CATALOG). */
 const valoresBonus = {
-  relatorios_custom: 120,
-  dashboards_avancados: 80,
-  anamnese_ia: 150,
+  creditos_artes_10: 19,
+  creditos_artes_25: 39,
+  creditos_artes_50: 69,
+  creditos_artes_100: 119,
+  creditos_artes_150: 159,
 };
 
 function calcularBonus(plusIds) {
   return plusIds.reduce((t, k) => t + (valoresBonus[k] ?? 0), 0);
 }
 
-const PLUS_ORDER = ['relatorios_custom', 'dashboards_avancados', 'anamnese_ia'];
+const PLUS_ORDER = [
+  'creditos_artes_10',
+  'creditos_artes_25',
+  'creditos_artes_50',
+  'creditos_artes_100',
+  'creditos_artes_150',
+];
+const PLUS_CREDIT_IDS = PLUS_ORDER;
 const PROPOSTAS_STORAGE_KEY = 'aya.planos-precos.propostas.v1';
 let propostasSalvas = [];
 let propostaAtivaId = null;
@@ -107,7 +119,8 @@ let estadoInicialFormulario = null;
 
 /**
  * Ordem: menor → maior tier.
- * Bases: Starter 97, Basic 197, Growth 297, Scale 397, Pro 597.
+ * Bases (mensalidade): Starter 97, Basic 197, Growth 297, Scale 397, Pro 597.
+ * Licença (única): 297 / 497 / 797 / 1.497 / 2.497.
  */
 const PLANS = [
   {
@@ -116,6 +129,7 @@ const PLANS = [
     maxParticipants: 30,
     maxUsers: 1,
     base: 97,
+    licenca: 297,
     participantsLabel: 'até 30',
   },
   {
@@ -124,6 +138,7 @@ const PLANS = [
     maxParticipants: 60,
     maxUsers: 2,
     base: 197,
+    licenca: 497,
     participantsLabel: 'até 60',
   },
   {
@@ -132,6 +147,7 @@ const PLANS = [
     maxParticipants: 100,
     maxUsers: 3,
     base: 297,
+    licenca: 797,
     participantsLabel: 'até 100',
   },
   {
@@ -140,6 +156,7 @@ const PLANS = [
     maxParticipants: 200,
     maxUsers: 5,
     base: 397,
+    licenca: 1497,
     participantsLabel: 'até 200',
   },
   {
@@ -148,6 +165,7 @@ const PLANS = [
     maxParticipants: Infinity,
     maxUsers: Infinity,
     base: 597,
+    licenca: 2497,
     participantsLabel: 'Ilimitado',
   },
 ];
@@ -356,11 +374,16 @@ function criarElementoResumoOperacao(receita, valorPlano) {
 
 function getSelectedPlusIds() {
   const ids = [];
-  document.querySelectorAll('.plus-list__input:checked').forEach((input) => {
-    const id = input.getAttribute('data-plus-id');
-    if (id && PLUS_CATALOG[id]) ids.push(id);
-  });
+  const creditId = document.getElementById('creditos-artes-select')?.value ?? '';
+  if (creditId && PLUS_CATALOG[creditId]) ids.push(creditId);
   return ids;
+}
+
+function aplicarSelectCreditos(selected) {
+  const select = document.getElementById('creditos-artes-select');
+  if (!select) return;
+  const creditId = PLUS_CREDIT_IDS.find((id) => selected.has(id)) ?? '';
+  select.value = creditId;
 }
 
 /** Soma dos valores percebidos dos módulos Plus selecionados. */
@@ -443,28 +466,30 @@ function custoMensalistasExtras(plan, mensalistas) {
   return acimaDoIncluso * regra.valorExtra;
 }
 
-function calcularTotalPlano(plan, participantes, mensalistas) {
+function calcularTotalPlano(plan, participantes, mensalistas, plusIds = []) {
   const cabeParticipantes = participantes <= plan.maxParticipants;
   if (!cabeParticipantes) {
-    return { total: null, extrasMensalistas: null, breakdown: null, cabeParticipantes: false };
+    return { total: null, extrasMensalistas: null, extrasIa: null, breakdown: null, cabeParticipantes: false };
   }
-  const extras = custoMensalistasExtras(plan, mensalistas);
-  const total = plan.base + extras;
+  const extrasMensalistas = custoMensalistasExtras(plan, mensalistas);
+  const extrasIa = somaValorBonus(plusIds);
+  const total = plan.base + extrasMensalistas + extrasIa;
   const breakdown = {
     base: plan.base,
-    extrasMensalistas: extras,
+    extrasMensalistas,
+    extrasIa,
   };
-  return { total, extrasMensalistas: extras, breakdown, cabeParticipantes: true };
+  return { total, extrasMensalistas, extrasIa, breakdown, cabeParticipantes: true };
 }
 
 /**
- * valorBase = preço visível (plano + extras mensalistas). Módulos Plus não entram.
+ * valorBase = preço visível (plano + extras de mensalistas + créditos de artes IA).
  */
-function planoRecomendado(participantes, mensalistas) {
+function planoRecomendado(participantes, mensalistas, plusIds = []) {
   let best = null;
   let bestCost = Infinity;
   for (const plan of PLANS) {
-    const r = calcularTotalPlano(plan, participantes, mensalistas);
+    const r = calcularTotalPlano(plan, participantes, mensalistas, plusIds);
     if (!r.cabeParticipantes || r.total === null) continue;
     if (r.total < bestCost) {
       bestCost = r.total;
@@ -473,7 +498,7 @@ function planoRecomendado(participantes, mensalistas) {
   }
   if (!best) {
     const pro = PLANS[PLANS.length - 1];
-    return { plan: pro, ...calcularTotalPlano(pro, participantes, mensalistas) };
+    return { plan: pro, ...calcularTotalPlano(pro, participantes, mensalistas, plusIds) };
   }
   return best;
 }
@@ -482,14 +507,12 @@ function indexPlano(planId) {
   return PLANS.findIndex((p) => p.id === planId);
 }
 
-function logNegociacaoInterno(planoNome, valorBase, plusIds) {
-  const valorBonus = somaValorBonus(plusIds);
-  const valorInterno = valorBase + valorBonus;
+function logNegociacaoInterno(planoNome, valorTotal, plusIds) {
+  const extrasIa = somaValorBonus(plusIds);
   console.log({
     plano: planoNome,
-    valorBase,
-    valorInterno,
-    valorBonus,
+    valorTotal,
+    extrasIa,
   });
 }
 
@@ -566,7 +589,7 @@ function renderCards() {
     }
   }
 
-  const rec = planoRecomendado(participantes, mensalistas);
+  const rec = planoRecomendado(participantes, mensalistas, plusIds);
   const idx = indexPlano(rec.plan.id);
 
   const recRegra = regraMensalistasDoPlano(rec.plan);
@@ -611,13 +634,21 @@ function renderCards() {
   );
 }
 
+function appendLinhaExtrasIa(parent, extrasIa) {
+  if (!extrasIa || extrasIa <= 0) return;
+  const line = document.createElement('div');
+  line.className = 'price-extras-ia';
+  line.textContent = `Inclui ${fmt.format(extrasIa)}/mês de créditos de artes IA`;
+  parent.appendChild(line);
+}
+
 function createCard({ plan, role }, participantes, mensalistas, giftUi) {
   const { plusIds = [], receita, totalPresencasMes = 0 } = giftUi || {};
   const article = document.createElement('article');
   article.className = 'plan-card';
   if (role === 'recommended') article.classList.add('plan-card--recommended');
 
-  const result = calcularTotalPlano(plan, participantes, mensalistas);
+  const result = calcularTotalPlano(plan, participantes, mensalistas, plusIds);
   const insufficient = !result.cabeParticipantes;
 
   if (insufficient) article.classList.add('plan-card--insufficient');
@@ -658,7 +689,6 @@ function createCard({ plan, role }, participantes, mensalistas, giftUi) {
   const mensInc =
     regraM.inclusos === Infinity ? 'Ilimitados' : `até ${regraM.inclusos}`;
   const rowM = row('Mensalistas inclusos', mensInc);
-
   article.appendChild(rowP);
   article.appendChild(rowU);
   article.appendChild(rowM);
@@ -717,6 +747,12 @@ function createCard({ plan, role }, participantes, mensalistas, giftUi) {
       block.appendChild(perPart);
       block.appendChild(monthRow);
       block.appendChild(ctx);
+      appendLinhaExtrasIa(block, result.extrasIa);
+
+      const licencaLine = document.createElement('div');
+      licencaLine.className = 'price-license';
+      licencaLine.textContent = `Licença: ${fmt.format(plan.licenca)} (única)`;
+      block.appendChild(licencaLine);
 
       stack.appendChild(block);
     } else {
@@ -725,6 +761,12 @@ function createCard({ plan, role }, participantes, mensalistas, giftUi) {
       now.dataset.priceKey = plan.id;
       now.textContent = `${fmt.format(total)}/mês`;
       stack.appendChild(now);
+      appendLinhaExtrasIa(stack, result.extrasIa);
+
+      const licencaLine = document.createElement('div');
+      licencaLine.className = 'price-license';
+      licencaLine.textContent = `Licença: ${fmt.format(plan.licenca)} (única)`;
+      stack.appendChild(licencaLine);
     }
   }
 
@@ -786,7 +828,7 @@ function createGiftSection(plusIds) {
     const subPlus = document.createElement('p');
     subPlus.className = 'plan-card__gift-sub plan-card__gift-sub--plus';
     const totalPercebido = somaValorBonus(orderedPlus);
-    subPlus.textContent = `Módulos Plus inclusos (valor percebido ~${fmt.format(totalPercebido)}/mês):`;
+    subPlus.textContent = `Incluído na mensalidade (${fmt.format(totalPercebido)}/mês):`;
 
     const listPlus = document.createElement('ul');
     listPlus.className = 'plan-card__gift-list plan-card__gift-list--plus';
@@ -956,10 +998,7 @@ function aplicarEstadoFormulario(estado) {
   if (taxaEl) taxaEl.value = `${clampTaxaPresencaPct(estado.taxaPresencaPct)}%`;
 
   const selected = new Set(Array.isArray(estado.plusIds) ? estado.plusIds : []);
-  document.querySelectorAll('.plus-list__input').forEach((input) => {
-    const id = input.getAttribute('data-plus-id');
-    input.checked = !!id && selected.has(id);
-  });
+  aplicarSelectCreditos(selected);
 
   renderCards();
   pulsePrices();
@@ -976,10 +1015,11 @@ function montarResumoProposta(estado) {
     valorMax: estado.valorMaxParticipante,
     taxaPresenca: estado.taxaPresencaPct,
   });
-  const rec = planoRecomendado(participantes, estado.mensalistas);
+  const rec = planoRecomendado(participantes, estado.mensalistas, estado.plusIds);
   return {
     plano: rec.plan.name,
     valorPlano: rec.total ?? 0,
+    licenca: rec.plan.licenca ?? 0,
     receitaMedia: det.total,
   };
 }
@@ -1124,9 +1164,7 @@ function criarNovaProposta() {
   if (taxaEl) taxaEl.value = '';
   if (nomeClienteEl) nomeClienteEl.value = '';
 
-  document.querySelectorAll('.plus-list__input').forEach((input) => {
-    input.checked = false;
-  });
+  aplicarSelectCreditos(new Set());
 
   fecharModalSalvarProposta();
   renderCards();
@@ -1156,12 +1194,13 @@ function init() {
     });
   }
 
-  document.querySelectorAll('.plus-list__input').forEach((input) => {
-    input.addEventListener('change', () => {
+  const creditosSelect = document.getElementById('creditos-artes-select');
+  if (creditosSelect) {
+    creditosSelect.addEventListener('change', () => {
       renderCards();
       pulsePrices();
     });
-  });
+  }
 
   const btnSalvar = document.getElementById('btn-salvar-proposta');
   if (btnSalvar) btnSalvar.addEventListener('click', abrirModalSalvarProposta);
