@@ -1,0 +1,848 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#020617" />
+  <meta name="robots" content="noindex,nofollow" />
+  <meta name="description"
+    content="Apresentação comercial Portal do Luar — eventos conscientes, retiros e workshops." />
+  <title>Apresentação — Eventos Conscientes · Portal do Luar</title>
+  <link rel="icon" type="image/png" href="../../assets/icons/favicon.png" />
+  <link rel="icon" href="../../assets/icons/favicon.ico" sizes="any" />
+  <link rel="apple-touch-icon" href="../../assets/icons/favicon.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./style.css" />
+  <link rel="stylesheet" href="./simulator.css" />
+</head>
+
+<body>
+  <div class="deck" id="deck" aria-roledescription="apresentação">
+    <div class="deck__progress" aria-hidden="true">
+      <div class="deck__progress-bar" id="deck-progress"></div>
+    </div>
+
+    <div class="deck__chrome">
+      <div class="deck__brand">
+        <img src="../../assets/images/hub/logo-mark.png" width="28" height="38" alt="" />
+        <span class="deck__brand-name">Portal do Luar</span>
+        <a class="deck__hub-back" id="deck-hub-back" href="../index.html">← Tipos</a>
+        <span class="deck__path-tag" id="deck-path-tag" hidden>Eventos Conscientes</span>
+      </div>
+      <p class="deck__counter" id="deck-counter" aria-live="polite">1 / 15</p>
+    </div>
+
+    <div class="deck__viewport" id="deck-viewport">
+
+      <!-- 1. Capa -->
+      <section class="deck__slide deck__slide--cover is-active" data-slide="0" aria-label="Capa">
+        <div class="deck__inner">
+          <img class="deck__cover-logo" src="../../assets/images/hub/logo-mark.png" width="72" height="97"
+            alt="Portal do Luar" />
+          <p class="deck__eyebrow">Sistema de Gestão de Eventos Conscientes</p>
+          <h1 class="deck__title">
+            Seu evento com <span class="deck__title-accent">pagamento automático</span> e
+            <span class="deck__title-accent">controle</span>
+          </h1>
+          <p class="deck__lead">
+            Oferta para terapeutas, facilitadores e espaços de bem-estar e conexão.
+          </p>
+          <p class="deck__cover-audience">
+            Retiros · Workshops · Yoga · Meditação · Terapias · Experiências conscientes
+          </p>
+          <p class="deck__cover-hint">Use → ou Espaço para avançar</p>
+        </div>
+      </section>
+
+      <!-- 2. Agenda -->
+      <section class="deck__slide" data-slide="1" aria-label="Como vamos trabalhar" hidden>
+        <div class="deck__inner">
+          <p class="deck__eyebrow">Roteiro</p>
+          <h2 class="deck__title">Como vamos trabalhar hoje</h2>
+          <p class="deck__lead">
+            Primeiro entendemos como o seu espaço funciona e onde estão os principais desafios.
+            Depois, mostramos como o Portal do Luar pode ajudar na prática.
+          </p>
+          <ol class="deck__agenda">
+            <li>
+              <span class="deck__agenda-num">1</span>
+              <p class="deck__agenda-text">Entender o espaço, a equipe e a rotina dos eventos</p>
+            </li>
+            <li>
+              <span class="deck__agenda-num">2</span>
+              <p class="deck__agenda-text">Apresentar os problemas que o Portal resolve</p>
+            </li>
+            <li>
+              <span class="deck__agenda-num">3</span>
+              <p class="deck__agenda-text">Mostrar como o Portal do Luar organiza esses pontos</p>
+            </li>
+            <li>
+              <span class="deck__agenda-num">4</span>
+              <p class="deck__agenda-text">Ver o sistema aplicado à realidade do seu espaço</p>
+            </li>
+            <li>
+              <span class="deck__agenda-num">5</span>
+              <p class="deck__agenda-text">Definir a melhor configuração e apresentar a proposta</p>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- 3. Qualificação — quem está presente -->
+      <section class="deck__slide" data-slide="2" aria-label="Qualificação: quem está presente" hidden>
+        <div class="deck__inner">
+          <p class="deck__eyebrow">Qualificação · 1 de 7</p>
+          <h2 class="deck__title">Quem está nesta conversa?</h2>
+          <p class="deck__q-hint">Identifique o espaço e anote quem participa da reunião.</p>
+          <label class="deck__field">
+            <span class="deck__field-label">Nome do espaço</span>
+            <input class="deck__input" type="text" id="field-cliente" name="cliente" maxlength="120"
+              placeholder="Ex.: Espaço Aurora" autocomplete="organization" />
+          </label>
+          <label class="deck__field">
+            <span class="deck__field-label">Pessoas e responsabilidades</span>
+            <textarea class="deck__textarea" id="field-presentes" name="presentes" rows="4" maxlength="800"
+              placeholder="Ex.:&#10;Maria — organização / facilitação&#10;João — financeiro&#10;Ana — inscrição e acolhimento"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <!-- 4. Qualificação — eventos -->
+      <section class="deck__slide" data-slide="3" aria-label="Qualificação: eventos por mês" hidden>
+        <div class="deck__inner">
+          <p class="deck__eyebrow">Qualificação · 2 de 7</p>
+          <h2 class="deck__title">Quantos eventos por mês?</h2>
+          <p class="deck__q-hint">Escolha com o cliente a opção mais próxima da realidade do espaço.</p>
+          <div class="deck__chips" data-qualify="trabalhos" role="group" aria-label="Eventos por mês">
+            <button type="button" class="deck__chip" data-value="1">1</button>
+            <button type="button" class="deck__chip" data-value="2">2</button>
+            <button type="button" class="deck__chip" data-value="3">3</button>
+            <button type="button" class="deck__chip" data-value="4+">4+</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Qualificação — pessoas -->
+      <section class="deck__slide" data-slide="4" aria-label="Qualificação: pessoas por evento" hidden>
+        <div class="deck__inner">
+          <p class="deck__eyebrow">Qualificação · 3 de 7</p>
+          <h2 class="deck__title">Pessoas por evento?</h2>
+          <p class="deck__q-hint">Média aproximada — alinhe com o cliente.</p>
+          <label class="deck__field">
+            <span class="deck__field-label">Média de pessoas por evento</span>
+            <input class="deck__input" type="number" id="field-pessoas-qual" name="pessoas_qual" min="1" max="999"
+              step="1" inputmode="numeric" placeholder="Ex.: 60" />
+          </label>
+        </div>
+      </section>
+
+      <!-- 6. Qualificação — mensalistas -->
+      <section class="deck__slide" data-slide="5" aria-label="Qualificação: mensalistas" hidden>
+        <div class="deck__inner">
+          <p class="deck__eyebrow">Qualificação · 4 de 7</p>
+          <h2 class="deck__title">Vocês possuem membros ou assinantes mensais?</h2>
+          <p class="deck__q-hint">Membros/assinantes participam com frequência e ajudam a sustentar o espaço.</p>
+          <div class="deck__chips" data-qualify="mensalistas" role="group" aria-label="Possui membros mensais">
+            <button type="button" class="deck__chip" data-value="Sim" data-reveal="mensalistas-qtd-wrap">Sim</button>
+            <button type="button" class="deck__chip" data-value="Não" data-hide="mensalistas-qtd-wrap">Não</button>
+          </div>
+          <div class="deck__sub-block" id="mensalistas-qtd-wrap" aria-hidden="true">
+            <p class="deck__q-hint">Quantos membros mensais?</p>
+            <div class="deck__chips" data-qualify="mensalistas_qtd" role="group" aria-label="Quantidade de membros mensais">
+              <button type="button" class="deck__chip" data-value="Até 10">Até 10</button>
+              <button type="button" class="deck__chip" data-value="10–30">10–30</button>
+              <button type="button" class="deck__chip" data-value="30–60">30–60</button>
+              <button type="button" class="deck__chip" data-value="60+">60+</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 7. Qualificação — ferramentas -->
+      <section class="deck__slide" data-slide="6" aria-label="Qualificação: ferramentas de hoje" hidden>
+        <div class="deck__inner">
+          <p class="deck__eyebrow">Qualificação · 5 de 7</p>
+          <h2 class="deck__title">Hoje vocês usam:</h2>
+          <p class="deck__q-hint">Pode marcar mais de uma — o que o espaço usa hoje.</p>
+          <div class="deck__chips deck__chips--stack deck__chips--multi" data-qualify="contexto" data-multi="true"
+            role="group" aria-label="Ferramentas usadas hoje">
+            <button type="button" class="deck__chip" data-value="WhatsApp">WhatsApp</button>
+            <button type="button" class="deck__chip" data-value="Planilha">Planilha</button>
+            <button type="button" class="deck__chip" data-value="Papel">Papel</button>
+            <button type="button" class="deck__chip" data-value="Google Forms">Google Forms</button>
+            <button type="button" class="deck__chip" data-value="Outro" data-reveal-outro="contexto-outro-wrap">Outro</button>
+          </div>
+          <div class="deck__sub-block" id="contexto-outro-wrap" aria-hidden="true">
+            <label class="deck__field deck__field--dor" style="margin-top: 0.85rem">
+              <span class="deck__field-label">Qual ferramenta / processo?</span>
+              <input class="deck__input" type="text" id="field-contexto-outro" name="contexto_outro" maxlength="120"
+                placeholder="Ex.: Sympla, Even3, Notion, grupo no Telegram…" autocomplete="off" />
+            </label>
+          </div>
+        </div>
+      </section>
+
+      <!-- 8. Qualificação — dor do espaço -->
+      <section class="deck__slide" data-slide="7" aria-label="Qualificação: dificuldade do espaço" hidden>
+        <div class="deck__inner">
+          <p class="deck__eyebrow">Qualificação · 6 de 7</p>
+          <h2 class="deck__title">Qual é hoje a maior dificuldade na organização dos eventos?</h2>
+          <label class="deck__field deck__field--dor">
+            <span class="deck__field-label">Dor principal</span>
+            <textarea class="deck__textarea" id="field-dor" name="dor" rows="4" maxlength="400"
+              placeholder="Ex.: comprovantes no WhatsApp, lotes, cupons, cobrança manual, controle de vagas…"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <!-- 9. Qualificação — dificuldade do participante -->
+      <section class="deck__slide" data-slide="8" aria-label="Qualificação: dificuldade do participante" hidden>
+        <div class="deck__inner">
+          <p class="deck__eyebrow">Qualificação · 7 de 7</p>
+          <h2 class="deck__title">Onde você acha que o participante mais encontra dificuldade hoje?</h2>
+          <p class="deck__lead">
+            Pense desde a inscrição até a confirmação do pagamento e do lugar no evento.
+          </p>
+          <label class="deck__field deck__field--dor">
+            <span class="deck__field-label">Dificuldade do participante</span>
+            <textarea class="deck__textarea" id="field-dor-participante" name="dor_participante" rows="4"
+              maxlength="400"
+              placeholder="Ex.: não sabe se pagou certo, perde o link do PIX, não recebe orientação clara…"></textarea>
+          </label>
+        </div>
+      </section>
+
+      <!-- 8–11. Dor — organizadores (uma dor por slide) -->
+      <section class="deck__slide deck__slide--pain-staff" data-slide="9" aria-label="Organizadores: pagamento manual" hidden>
+        <div class="deck__inner deck__inner--wide">
+          <div class="deck__pain-meta">
+            <p class="deck__eyebrow">Problemas que resolve · 1 de 4</p>
+            <span class="deck__pain-audience deck__pain-audience--staff">
+              <svg class="deck__pain-audience-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <path d="M2 10h20" />
+              </svg>
+              Organizadores &amp; equipe
+            </span>
+          </div>
+          <h2 class="deck__title">Pagamento manual</h2>
+          <p class="deck__lead">Comprovantes espalhados no WhatsApp e baixa demorada — difícil saber quem já pagou.</p>
+          <figure class="deck__teaser deck__teaser--solo">
+            <img class="deck__teaser-img deck__teaser-img--fit" src="./assets/teaser-tesouraria.jpg"
+              alt="Conta / Tesouraria com saldo, entradas PIX e cartão e liberações" width="1024" height="558"
+              loading="lazy" decoding="async" />
+            <figcaption class="deck__teaser-caption">PIX e cartão com baixa automática — inscrição, pagamento e
+              financeiro no mesmo lugar.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="deck__slide deck__slide--pain-staff" data-slide="10" aria-label="Organizadores: gestão de ingressos improvisada" hidden>
+        <div class="deck__inner deck__inner--wide">
+          <div class="deck__pain-meta">
+            <p class="deck__eyebrow">Problemas que resolve · 2 de 4</p>
+            <span class="deck__pain-audience deck__pain-audience--staff">
+              <svg class="deck__pain-audience-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <path d="M2 10h20" />
+              </svg>
+              Organizadores &amp; equipe
+            </span>
+          </div>
+          <h2 class="deck__title">Gestão de ingressos improvisada</h2>
+          <p class="deck__lead">Lotes, cupons e limites de vagas integrados à inscrição.</p>
+          <figure class="deck__teaser deck__teaser--solo">
+            <img class="deck__teaser-img deck__teaser-img--fit" src="./assets/teaser-lotes.jpg"
+              alt="Configuração de ingressos por lote com preços, datas e pré-visualização" width="1024" height="558"
+              loading="lazy" decoding="async" />
+            <figcaption class="deck__teaser-caption">Lotes, cupons e vagas no fluxo da inscrição — sem planilha
+              paralela.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="deck__slide deck__slide--pain-staff" data-slide="11" aria-label="Organizadores: financeiro confuso" hidden>
+        <div class="deck__inner deck__inner--wide">
+          <div class="deck__pain-meta">
+            <p class="deck__eyebrow">Problemas que resolve · 3 de 4</p>
+            <span class="deck__pain-audience deck__pain-audience--staff">
+              <svg class="deck__pain-audience-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <path d="M2 10h20" />
+              </svg>
+              Organizadores &amp; equipe
+            </span>
+          </div>
+          <h2 class="deck__title">Financeiro confuso</h2>
+          <p class="deck__lead">Não fica claro o saldo do evento nem o que ainda falta receber.</p>
+          <figure class="deck__teaser deck__teaser--solo">
+            <img class="deck__teaser-img deck__teaser-img--fit" src="./assets/teaser-financeiro-evento.jpg"
+              alt="Financeiro do evento com recebido, em aberto, despesas e lista de baixas" width="1024" height="558"
+              loading="lazy" decoding="async" />
+            <figcaption class="deck__teaser-caption">Financeiro do evento: quem pagou, o que falta e o resultado
+              claro.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="deck__slide deck__slide--pain-staff" data-slide="12" aria-label="Organizadores: artes manuais" hidden>
+        <div class="deck__inner deck__inner--wide">
+          <div class="deck__pain-meta">
+            <p class="deck__eyebrow">Problemas que resolve · 4 de 4</p>
+            <span class="deck__pain-audience deck__pain-audience--staff">
+              <svg class="deck__pain-audience-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <rect x="2" y="5" width="20" height="14" rx="2" />
+                <path d="M2 10h20" />
+              </svg>
+              Organizadores &amp; equipe
+            </span>
+          </div>
+          <h2 class="deck__title">Artes manuais a cada edição</h2>
+          <p class="deck__lead">Flyer, stories e posts a cada evento: horas no Canva e similares.</p>
+          <figure class="deck__teaser deck__teaser--solo">
+            <img class="deck__teaser-img deck__teaser-img--fit" src="./assets/teaser-artes-manuais.png"
+              alt="Geração de artes com IA no evento — feed, story e compartilhamento" width="1024" height="559"
+              loading="lazy" decoding="async" />
+            <figcaption class="deck__teaser-caption">Luna IA gera imagens para o evento e redes sociais — feed,
+              stories e compartilhamento — sem sair do Portal.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 12–15. Dor — participantes (uma dor por slide) -->
+      <section class="deck__slide deck__slide--pain-participant" data-slide="13" aria-label="Participantes: só PIX sem parcelar" hidden>
+        <div class="deck__inner deck__inner--wide">
+          <div class="deck__pain-meta">
+            <p class="deck__eyebrow">Problemas que resolve · 1 de 4</p>
+            <span class="deck__pain-audience deck__pain-audience--participant">
+              <svg class="deck__pain-audience-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Participantes
+            </span>
+          </div>
+          <h2 class="deck__title">Só PIX / sem parcelar</h2>
+          <p class="deck__lead">Ticket alto e só PIX: parte das pessoas desiste ou pede transferência.</p>
+          <figure class="deck__teaser deck__teaser--solo">
+            <img class="deck__teaser-img deck__teaser-img--fit" src="./assets/teaser-pagamento-pix.jpg"
+              alt="Pagamento com opção de PIX e cartão no portal do participante" width="1024" height="558"
+              loading="lazy" decoding="async" />
+            <figcaption class="deck__teaser-caption">PIX e cartão no mesmo fluxo — com parcelamento quando fizer
+              sentido.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="deck__slide deck__slide--pain-participant" data-slide="14" aria-label="Participantes: orientações desencontradas" hidden>
+        <div class="deck__inner deck__inner--wide">
+          <div class="deck__pain-meta">
+            <p class="deck__eyebrow">Problemas que resolve · 2 de 4</p>
+            <span class="deck__pain-audience deck__pain-audience--participant">
+              <svg class="deck__pain-audience-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Participantes
+            </span>
+          </div>
+          <h2 class="deck__title">Orientações desencontradas</h2>
+          <p class="deck__lead">Horário, local e avisos chegam por canais diferentes e podem se perder.</p>
+          <figure class="deck__teaser deck__teaser--solo">
+            <img class="deck__teaser-img deck__teaser-img--fit" src="./assets/teaser-orientacoes.png"
+              alt="Orientações do evento reunidas no portal do participante" width="1024" height="555"
+              loading="lazy" decoding="async" />
+            <figcaption class="deck__teaser-caption">Informações importantes do evento reunidas em um único lugar —
+              e com confirmação via WhatsApp.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="deck__slide deck__slide--pain-participant" data-slide="15" aria-label="Participantes: pagamento sem confirmação" hidden>
+        <div class="deck__inner deck__inner--wide">
+          <div class="deck__pain-meta">
+            <p class="deck__eyebrow">Problemas que resolve · 3 de 4</p>
+            <span class="deck__pain-audience deck__pain-audience--participant">
+              <svg class="deck__pain-audience-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Participantes
+            </span>
+          </div>
+          <h2 class="deck__title">Pagamento sem confirmação</h2>
+          <p class="deck__lead">Enviam comprovante e ficam sem retorno claro se a vaga está garantida.</p>
+          <figure class="deck__teaser deck__teaser--solo">
+            <img class="deck__teaser-img deck__teaser-img--fit" src="./assets/teaser-pagamento-pix.jpg"
+              alt="Pagamento PIX com QR Code, copia e cola e resumo do pedido" width="1024" height="558"
+              loading="lazy" decoding="async" />
+            <figcaption class="deck__teaser-caption">Pagamento integrado com confirmação automática da inscrição.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section class="deck__slide deck__slide--pain-participant" data-slide="16" aria-label="Participantes: jornada confusa" hidden>
+        <div class="deck__inner deck__inner--wide">
+          <div class="deck__pain-meta">
+            <p class="deck__eyebrow">Problemas que resolve · 4 de 4</p>
+            <span class="deck__pain-audience deck__pain-audience--participant">
+              <svg class="deck__pain-audience-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                <circle cx="12" cy="7" r="4" />
+              </svg>
+              Participantes
+            </span>
+          </div>
+          <h2 class="deck__title">Jornada confusa</h2>
+          <p class="deck__lead">Inscrição, orientações e confirmação ficam espalhadas, sem uma jornada clara do início ao fim.</p>
+          <figure class="deck__teaser deck__teaser--solo">
+            <img class="deck__teaser-img deck__teaser-img--fit" src="./assets/teaser-jornada-confusa.png"
+              alt="Inscrição confirmada com passos claros no portal do participante" width="1024" height="555"
+              loading="lazy" decoding="async" />
+            <figcaption class="deck__teaser-caption">Uma jornada clara mostra cada etapa — inscrição, pagamento e
+              confirmação.</figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- 16. Promessa -->
+      <section class="deck__slide" data-slide="17" aria-label="Promessa" hidden>
+        <div class="deck__inner">
+          <p class="deck__eyebrow">Proposta de valor</p>
+          <h2 class="deck__title">
+            Menos cobrança de comprovante.<br />
+            <span class="deck__title-accent">Mais tempo</span> para o evento.
+          </h2>
+          <p class="deck__lead">
+            Da inscrição à prestação de contas: <strong>você sabe quem pagou</strong>.
+            Os participantes sabem em que etapa estão, sem depender de recado solto.
+          </p>
+          <div class="deck__cards deck__cards--3" style="margin-top: 1.75rem">
+            <div class="deck__card deck__card--intel">
+              <span class="deck__card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <path d="M2 10h20" />
+                </svg>
+              </span>
+              <h3 class="deck__card-title">Pagamento automático</h3>
+              <p class="deck__card-text">PIX e cartão com baixa automática.</p>
+            </div>
+            <div class="deck__card deck__card--intel">
+              <span class="deck__card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 3v18h18" />
+                  <path d="M18 17V9" />
+                  <path d="M13 17V5" />
+                  <path d="M8 17v-3" />
+                </svg>
+              </span>
+              <h3 class="deck__card-title">Lotes e vagas</h3>
+              <p class="deck__card-text">Preço por lote, cupons e estoque sem planilha.</p>
+            </div>
+            <div class="deck__card deck__card--intel">
+              <span class="deck__card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="7" width="20" height="14" rx="2" />
+                  <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2" />
+                </svg>
+              </span>
+              <h3 class="deck__card-title">Controle da operação</h3>
+              <p class="deck__card-text">Inscrição, presença e financeiro juntos.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 14. Na prática -->
+      <section class="deck__slide" data-slide="18" aria-label="Na prática" hidden>
+        <div class="deck__inner">
+          <p class="deck__eyebrow">Na prática</p>
+          <h2 class="deck__title">Três pilares da operação</h2>
+          <div class="deck__cards deck__cards--3">
+            <div class="deck__card deck__card--intel">
+              <span class="deck__card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <path d="M2 10h20" />
+                </svg>
+              </span>
+              <h3 class="deck__card-title">Pagamento automático</h3>
+              <p class="deck__card-text">
+                PIX e cartão com baixa automática. Menos conferência de comprovante e confirmação mais rápida para quem se inscreve.
+              </p>
+            </div>
+            <div class="deck__card deck__card--intel">
+              <span class="deck__card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 3v18h18" />
+                  <path d="M18 17V9" />
+                  <path d="M13 17V5" />
+                  <path d="M8 17v-3" />
+                </svg>
+              </span>
+              <h3 class="deck__card-title">Lotes, cupons e vagas</h3>
+              <p class="deck__card-text">
+                Precifique por lote, controle estoque e use cupons — sem planilha paralela para cada edição.
+              </p>
+            </div>
+            <div class="deck__card deck__card--intel">
+              <span class="deck__card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10" />
+                  <path d="M2 12h20" />
+                  <path
+                    d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+                </svg>
+              </span>
+              <h3 class="deck__card-title">Presença digital</h3>
+              <p class="deck__card-text">
+                Portal próprio com páginas (FAQ, sobre o espaço), inscrições organizadas e links com prévia correta no WhatsApp.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 15. Automação -->
+      <section class="deck__slide" data-slide="19" aria-label="Automação e inteligência" hidden>
+        <div class="deck__inner deck__inner--wide">
+          <p class="deck__eyebrow">Automação &amp; inteligência</p>
+          <h2 class="deck__title">Menos trabalho manual. Mais tempo para o evento.</h2>
+          <div class="deck__cards deck__cards--4" style="margin-top: 1.75rem">
+            <div class="deck__card deck__card--intel deck__card--violet">
+              <span class="deck__card-icon deck__card-icon--luna" aria-hidden="true">
+                <img src="../../assets/images/luna/avatar.png" width="40" height="40" alt="" decoding="async" />
+              </span>
+              <h3 class="deck__card-title">Assistente Luna</h3>
+              <p class="deck__card-text">Dúvidas da operação e artes para redes sociais.</p>
+            </div>
+            <div class="deck__card deck__card--intel deck__card--teal">
+              <span class="deck__card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 3v18h18" />
+                  <path d="M7 14v4" />
+                  <path d="M12 10v8" />
+                  <path d="M17 6v12" />
+                </svg>
+              </span>
+              <h3 class="deck__card-title">Gráficos + relatórios</h3>
+              <p class="deck__card-text">Inscrições, lotes, presença e financeiro para decidir rápido.</p>
+            </div>
+            <div class="deck__card deck__card--intel deck__card--gold">
+              <span class="deck__card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="5" width="20" height="14" rx="2" />
+                  <path d="M2 10h20" />
+                </svg>
+              </span>
+              <h3 class="deck__card-title">Pagamentos automáticos</h3>
+              <p class="deck__card-text">PIX e cartão com confirmação e baixa automáticas.</p>
+            </div>
+            <div class="deck__card deck__card--intel deck__card--green">
+              <span class="deck__card-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 11.5a8.5 8.5 0 0 1-12.4 7.5L3 21l2.1-5.2A8.5 8.5 0 1 1 21 11.5z" />
+                </svg>
+              </span>
+              <h3 class="deck__card-title">WhatsApp integrado</h3>
+              <p class="deck__card-text">Confirmações, orientações e avisos no fluxo do evento.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 16. Onboarding -->
+      <section class="deck__slide" data-slide="20" aria-label="Como começar" hidden>
+        <div class="deck__inner">
+          <p class="deck__eyebrow">Por onde começamos</p>
+          <h2 class="deck__title">Começar é simples</h2>
+          <p class="deck__lead">Você não precisa fazer isso sozinho. Acompanhamos cada etapa.</p>
+          <ol class="deck__steps">
+            <li class="is-current">
+              <div>
+                <p class="deck__step-title">
+                  Demonstração
+                  <span class="deck__step-badge">Em andamento</span>
+                </p>
+                <p class="deck__step-text">Apresentamos o sistema e entendemos como o espaço funciona hoje.</p>
+              </div>
+            </li>
+            <li>
+              <div>
+                <p class="deck__step-title">Alinhamento</p>
+                <p class="deck__step-text">Definimos juntos o melhor formato e os próximos passos.</p>
+              </div>
+            </li>
+            <li>
+              <div>
+                <p class="deck__step-title">Configuração</p>
+                <p class="deck__step-text">Eventos, equipe e estrutura inicial prontos para uso.</p>
+              </div>
+            </li>
+            <li>
+              <div>
+                <p class="deck__step-title">Acompanhamento</p>
+                <p class="deck__step-text">Apoiamos a equipe até tudo estar claro e fluindo.</p>
+              </div>
+            </li>
+            <li>
+              <div>
+                <p class="deck__step-title">Primeiro evento</p>
+                <p class="deck__step-text">Você realiza o primeiro evento com acompanhamento.</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </section>
+
+      <!-- 17. Demo do sistema -->
+      <section class="deck__slide" data-slide="21" aria-label="Demonstração do sistema" hidden>
+        <div class="deck__inner">
+          <p class="deck__eyebrow">Demonstração</p>
+          <h2 class="deck__title">
+            Hora de <span class="deck__title-accent">mostrar o sistema</span>
+          </h2>
+          <p class="deck__lead">
+            Pause a apresentação, abra o Portal e conduza a demo com o que o espaço contou.
+            Depois volte aqui para montar a proposta de planos.
+          </p>
+          <details class="deck__accordion">
+            <summary class="deck__accordion-summary">
+              <span class="deck__accordion-summary-text">
+                Resumo da sessão
+                <span class="deck__accordion-count" id="session-summary-count" hidden></span>
+              </span>
+              <span class="deck__accordion-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M6 9l6 6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+                </svg>
+              </span>
+            </summary>
+            <div class="deck__accordion-body">
+              <div class="deck__summary-grid" id="session-summary">
+                <p class="deck__summary-empty">As respostas da qualificação aparecem aqui conforme a conversa avança.</p>
+              </div>
+            </div>
+          </details>
+          <ul class="deck__pain-list" style="margin-top: 1.25rem">
+            <li>
+              <span class="deck__pain-dot" aria-hidden="true"></span>
+              <span><strong>Inscrição + pagamento:</strong> do cadastro à confirmação automática.</span>
+            </li>
+            <li>
+              <span class="deck__pain-dot" aria-hidden="true"></span>
+              <span><strong>Operação:</strong> lotes, vagas, presença e financeiro no mesmo fluxo.</span>
+            </li>
+            <li>
+              <span class="deck__pain-dot" aria-hidden="true"></span>
+              <span><strong>Luna / artes:</strong> se a dor for tempo ou comunicação.</span>
+            </li>
+          </ul>
+          <p class="deck__q-hint" style="margin-top: 1.25rem">Quando terminar a demo, avance para salvar a proposta e abrir planos.</p>
+        </div>
+      </section>
+
+      <!-- 18. Fechamento — mesmo simulador de planos e preços -->
+      <section class="deck__slide" data-slide="22" aria-label="Dados para o cálculo" hidden>
+        <div class="deck__inner deck__inner--wide">
+          <p class="deck__eyebrow">Fechamento</p>
+          <h2 class="deck__title">
+            Dados para o <span class="deck__title-accent">cálculo</span>
+          </h2>
+
+          <div class="deck-sim" id="deck-sim">
+            <section class="propostas-topo" aria-label="Propostas salvas">
+              <div class="propostas-topo__row">
+                <label class="propostas-topo__label" for="propostas-select">Propostas salvas</label>
+                <select id="propostas-select" class="propostas-topo__select">
+                  <option value="">Nenhuma proposta salva</option>
+                </select>
+                <button type="button" id="btn-excluir-proposta"
+                  class="propostas-topo__btn propostas-topo__btn--danger propostas-topo__btn--small" hidden>Excluir</button>
+                <button type="button" id="btn-nova-proposta"
+                  class="propostas-topo__btn propostas-topo__btn--ghost">Nova</button>
+              </div>
+              <p id="proposta-atual-info" class="propostas-topo__meta">Nenhuma proposta ativa.</p>
+            </section>
+
+            <section class="panel" id="panel-config" aria-labelledby="config-heading">
+              <div class="panel__head">
+                <h2 id="config-heading" class="panel__title">Configuração</h2>
+                <button type="button" class="deck-sim-toggle" data-toggle-panel="panel-config"
+                  aria-expanded="true" aria-controls="panel-config-body" aria-label="Fechar configuração">
+                  <span class="deck-sim-toggle__close" aria-hidden="true">×</span>
+                  <span class="deck-sim-toggle__open" aria-hidden="true">Abrir</span>
+                </button>
+              </div>
+              <div class="panel__body" id="panel-config-body">
+              <div class="grid-inputs">
+                <label class="field">
+                  <span class="field__label">Eventos por mês</span>
+                  <input type="number" id="trabalhos" class="field__input" min="0" step="1" value="" inputmode="numeric"
+                    placeholder="Ex.: 2" />
+                </label>
+                <label class="field">
+                  <span class="field__label">Valor mínimo participante</span>
+                  <input type="text" id="valor-participante-min" class="field__input" value="" inputmode="numeric"
+                    placeholder="Ex.: 20" autocomplete="off" />
+                </label>
+                <label class="field">
+                  <span class="field__label">Valor máximo participante</span>
+                  <input type="text" id="valor-participante-max" class="field__input" value="" inputmode="numeric"
+                    placeholder="Ex.: 50" autocomplete="off" />
+                </label>
+                <label class="field field--pessoas-total">
+                  <span class="field__label">Média de pessoas por evento</span>
+                  <input type="number" id="pessoas-por-trabalho" class="field__input" min="0" step="1" value=""
+                    placeholder="Ex.: 60" inputmode="numeric" />
+                </label>
+                <label class="field">
+                  <span class="field__label">Quantidade membros mensais</span>
+                  <input type="number" id="mensalistas-qtd" class="field__input" min="0" max="500" step="1" value=""
+                    placeholder="Ex.: 30" inputmode="numeric" />
+                </label>
+                <label class="field">
+                  <span class="field__label">Valor pago membro (mês)</span>
+                  <input type="text" id="valor-mensalista" class="field__input" value="" inputmode="numeric"
+                    placeholder="Ex.: 150" autocomplete="off" />
+                </label>
+                <label class="field">
+                  <div class="label-with-help">
+                    <span class="field__label">Média presença membro</span>
+                    <span class="help-icon" aria-label="Taxa de presença dos mensalistas"
+                      data-tooltip="Membros mensais não participam de todos os eventos.&#10;Usamos taxa de presença para estimar média.">?</span>
+                  </div>
+                  <input type="text" id="taxaPresenca" class="field__input" value="70%" inputmode="numeric"
+                    autocomplete="off" placeholder="Ex.: 70%" />
+                </label>
+                <div class="field field--demais-right">
+                  <div class="label-with-help">
+                    <span class="field__label">Participantes por evento</span>
+                    <span class="help-icon" aria-label="Explicação do cálculo de não mensalistas"
+                      data-tooltip="Calculado como:&#10;Média de pessoas por evento&#10;menos mensalistas presentes.&#10;&#10;Mensalistas presentes = arredondamento para cima de (mensalistas × taxa de presença).">?</span>
+                  </div>
+                  <div class="field__demais-strip" role="status">
+                    <strong id="demais-participantes-por-trabalho" class="field__demais-strip-value">0</strong>
+                    <span id="demais-participantes-formula" class="field__demais-strip-hint">0 − 0 (70%)</span>
+                  </div>
+                </div>
+              </div>
+              </div>
+            </section>
+
+            <section class="summary" id="panel-summary" aria-live="polite">
+              <div class="panel__head panel__head--summary">
+                <p class="summary__line summary__line--title">
+                  <span class="summary__icon" aria-hidden="true">◎</span>
+                  Você tem
+                  <strong id="participantes-total">0</strong>
+                  presenças/mês
+                  <span class="summary__inline-hint">(eventos × pessoas por evento)</span>
+                </p>
+                <button type="button" class="deck-sim-toggle" data-toggle-panel="panel-summary"
+                  aria-expanded="true" aria-controls="panel-summary-body" aria-label="Fechar resumo de presenças">
+                  <span class="deck-sim-toggle__close" aria-hidden="true">×</span>
+                  <span class="deck-sim-toggle__open" aria-hidden="true">Abrir</span>
+                </button>
+              </div>
+              <div class="panel__body" id="panel-summary-body">
+              <p class="summary__line summary__line--muted">
+                Inclui até <strong id="mensalistas-limite-rec">—</strong> membros mensais no plano indicado.
+              </p>
+              <p class="summary__line summary__line--muted summary__line--fine">
+                Membros participam em média de <strong id="summary-taxa-presenca-display">70</strong>% dos eventos —
+                usamos isso para estimar quantos entram na média de pessoas por evento ao calcular a receita de participantes.
+              </p>
+              <p id="summary-mensalistas-alerta" class="summary__line summary__line--alert" hidden></p>
+              <div class="summary__receita-split" role="group" aria-label="Receita estimada no mês">
+                <div class="summary__receita-item">
+                  <span aria-hidden="true">💰</span> Membros: <strong id="receita-mensalistas">—</strong>
+                </div>
+                <div class="summary__receita-item">
+                  <span aria-hidden="true">🎟</span> Participantes: <strong id="receita-participantes">—</strong>
+                  <span id="receita-participantes-faixa" class="summary__receita-sub" hidden></span>
+                </div>
+                <div class="summary__receita-item summary__receita-item--total">
+                  <span aria-hidden="true">💥</span> Total: <strong id="receita-total">—</strong>
+                  <span id="receita-total-faixa" class="summary__receita-sub" hidden></span>
+                </div>
+              </div>
+              <p class="summary__line summary__line--receita">
+                <span class="summary__icon" aria-hidden="true">◈</span>
+                Faixa total (ticket min./máx. nos participantes):
+                <strong id="receita-range">—</strong>
+                <span class="summary__receita-hint">Membros: qtd × valor/mês. Participantes: eventos × não-membros ×
+                  valor (média ou faixa).</span>
+              </p>
+              </div>
+            </section>
+
+            <label class="field plus-credits-field">
+              <span class="field__label">Créditos adicionais de artes IA</span>
+              <select id="creditos-artes-select" class="field__input">
+                <option value="">Sem créditos extras (5 inclusos)</option>
+                <option value="creditos_artes_10">+10 (15 no total) — uso ocasional — R$ 19</option>
+                <option value="creditos_artes_25">+25 (30 no total) — ~1 arte/dia — R$ 39</option>
+                <option value="creditos_artes_50">+50 (55 no total) — ~2 artes/dia — R$ 69</option>
+                <option value="creditos_artes_100">+100 (105 no total) — ~3 artes/dia — R$ 119</option>
+                <option value="creditos_artes_150">+150 (155 no total) — ~5 artes/dia — R$ 159</option>
+              </select>
+              <span class="field__hint">O plano já inclui 5 artes. Pacote extra (valor interno para o vendedor).</span>
+            </label>
+
+            <section class="cards" id="cards-root" aria-label="Comparação de planos"></section>
+
+            <button type="button" id="btn-salvar-proposta" hidden aria-hidden="true" tabindex="-1">Salvar proposta</button>
+
+            <div class="modal-backdrop" id="modal-salvar-proposta" aria-hidden="true">
+              <div class="modal">
+                <h3 class="modal__title">Salvar proposta</h3>
+                <p class="modal__text">Informe o nome do cliente para salvar esta proposta.</p>
+                <label class="field">
+                  <span class="field__label">Nome do cliente</span>
+                  <input type="text" id="input-nome-cliente" class="field__input" placeholder="Ex.: Espaço Aurora" />
+                </label>
+                <div class="modal__actions">
+                  <button type="button" class="propostas-topo__btn propostas-topo__btn--ghost"
+                    id="btn-cancelar-salvar">Cancelar</button>
+                  <button type="button" class="propostas-topo__btn" id="btn-confirmar-salvar">Salvar</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <p class="deck__form-error" id="proposta-error" hidden role="alert"></p>
+        </div>
+      </section>
+    </div>
+
+    <div class="deck__footer-tools">
+      <button type="button" class="deck__cover-reset" id="deck-reset">Reiniciar</button>
+      <p class="deck__keys-hint" aria-hidden="true">← → · Espaço · F tela cheia</p>
+    </div>
+
+    <nav class="deck__nav" aria-label="Navegação da apresentação">
+      <button type="button" class="deck__nav-btn" id="deck-prev" aria-label="Slide anterior" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M15 18l-6-6 6-6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+      <div class="deck__dots" id="deck-dots" role="tablist" aria-label="Slides"></div>
+      <button type="button" class="deck__nav-btn" id="deck-next" aria-label="Próximo slide">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+          <path d="M9 18l6-6-6-6" stroke-linecap="round" stroke-linejoin="round" />
+        </svg>
+      </button>
+    </nav>
+  </div>
+
+  <script src="./simulator.js" defer></script>
+  <script src="./deck.js" defer></script>
+</body>
+
+</html>

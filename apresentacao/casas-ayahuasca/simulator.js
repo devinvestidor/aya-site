@@ -777,20 +777,25 @@ function createCard({ plan, role }, participantes, mensalistas, giftUi) {
     article.appendChild(w);
   }
 
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.className = 'plan-card__btn';
-  btn.textContent = insufficient ? 'Volume acima deste plano' : getCTA(plan.id);
-  btn.disabled = insufficient;
-  btn.addEventListener('click', () => {
-    if (insufficient) return;
-    const enviado = enviarPlanoAoFechamento(plan, result.total);
-    if (!enviado) {
+  const embutidoNoDeck = Boolean(document.getElementById('deck-sim'));
+  if (!embutidoNoDeck) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'plan-card__btn';
+    btn.textContent = insufficient ? 'Volume acima deste plano' : getCTA(plan.id);
+    btn.disabled = insufficient;
+    btn.addEventListener('click', () => {
+      if (insufficient) return;
+      const enviado = enviarPlanoAoFechamento(plan, result.total);
+      if (enviado) return;
       const label = `${plan.name} — ${fmt.format(result.total)}`;
       alert(`Registrado na conversa: ${getCTA(plan.id)}\n${label}\n(Cole no CRM ou proposta.)`);
-    }
-  });
-  article.appendChild(btn);
+    });
+    article.appendChild(btn);
+  } else if (!insufficient && role === 'recommended') {
+    // No deck, o plano recomendado fica marcado visualmente — sem CTA "Quero…".
+    article.dataset.planId = plan.id;
+  }
 
   return article;
 }
@@ -1017,28 +1022,61 @@ function montarResumoProposta(estado) {
   };
 }
 
+function nomeCasaDaApresentacao() {
+  return document.getElementById('field-cliente')?.value?.trim() || '';
+}
+
+function atualizarBotaoNovaSalvar() {
+  const btn = document.getElementById('btn-nova-proposta');
+  if (!btn) return;
+  const embutido = Boolean(document.getElementById('deck-sim'));
+  const nomeCasa = nomeCasaDaApresentacao();
+  const podeSalvarRapido = embutido && nomeCasa.length >= 2 && !propostaAtivaId;
+
+  if (podeSalvarRapido) {
+    btn.textContent = 'Salvar';
+    btn.dataset.mode = 'salvar';
+    btn.classList.remove('propostas-topo__btn--ghost');
+    btn.setAttribute('aria-label', 'Salvar proposta');
+  } else {
+    btn.textContent = 'Nova';
+    btn.dataset.mode = 'nova';
+    btn.classList.add('propostas-topo__btn--ghost');
+    btn.setAttribute('aria-label', 'Nova proposta');
+  }
+}
+
 function atualizarPainelPropostas() {
   const select = document.getElementById('propostas-select');
   const btnExcluir = document.getElementById('btn-excluir-proposta');
   const info = document.getElementById('proposta-atual-info');
   if (!select || !btnExcluir || !info) return;
 
+  const nomeCasa = nomeCasaDaApresentacao();
   select.innerHTML = '';
+
   if (!propostasSalvas.length) {
     const option = document.createElement('option');
     option.value = '';
-    option.textContent = 'Nenhuma proposta salva';
+    if (nomeCasa) {
+      option.textContent = nomeCasa;
+      select.disabled = true;
+      info.textContent = `Em edição: ${nomeCasa}`;
+    } else {
+      option.textContent = 'Nenhuma proposta salva';
+      select.disabled = true;
+      info.textContent = 'Nenhuma proposta ativa.';
+    }
     select.appendChild(option);
-    select.disabled = true;
     btnExcluir.disabled = true;
     btnExcluir.hidden = true;
-    info.textContent = 'Nenhuma proposta ativa.';
+    atualizarBotaoNovaSalvar();
     return;
   }
 
   const placeholder = document.createElement('option');
   placeholder.value = '';
-  placeholder.textContent = 'Selecionar proposta...';
+  placeholder.textContent = nomeCasa && !propostaAtivaId ? nomeCasa : 'Selecionar proposta...';
   select.appendChild(placeholder);
 
   propostasSalvas.forEach((p) => {
@@ -1059,10 +1097,14 @@ function atualizarPainelPropostas() {
     btnExcluir.hidden = false;
   } else {
     select.value = '';
-    info.textContent = 'Selecione uma proposta salva ou crie uma nova.';
+    info.textContent = nomeCasa
+      ? `Em edição: ${nomeCasa}`
+      : 'Selecione uma proposta salva ou crie uma nova.';
     btnExcluir.disabled = true;
     btnExcluir.hidden = true;
   }
+
+  atualizarBotaoNovaSalvar();
 }
 
 function carregarPropostaSelecionada() {
@@ -1096,7 +1138,8 @@ function abrirModalSalvarProposta() {
   const input = document.getElementById('input-nome-cliente');
   if (!modal || !input) return;
   const ativa = propostasSalvas.find((p) => p.id === propostaAtivaId);
-  input.value = ativa?.clientName ?? '';
+  const nomeCasa = document.getElementById('field-cliente')?.value?.trim() || '';
+  input.value = ativa?.clientName || nomeCasa || '';
   modal.classList.add('is-open');
   modal.setAttribute('aria-hidden', 'false');
   input.focus();
@@ -1186,15 +1229,41 @@ function confirmarSalvarProposta() {
     input.focus();
     return;
   }
+  persistirPropostaComNome(nomeCliente);
+  fecharModalSalvarProposta();
+}
 
+function persistirPropostaComNome(nomeCliente) {
   const estado = coletarEstadoFormulario();
   const resumo = montarResumoProposta(estado);
   const now = new Date().toISOString();
+
+  if (propostaAtivaId) {
+    const idx = propostasSalvas.findIndex((p) => p.id === propostaAtivaId);
+    if (idx >= 0) {
+      propostasSalvas[idx] = {
+        ...propostasSalvas[idx],
+        clientName: nomeCliente,
+        updatedAt: now,
+        estado,
+        resumo,
+        origem: propostasSalvas[idx].origem || 'apresentacao-casas-ayahuasca',
+      };
+      salvarPropostasNoStorage();
+      atualizarPainelPropostas();
+      document.dispatchEvent(
+        new CustomEvent('aya:proposta-salva', { detail: { id: propostaAtivaId, clientName: nomeCliente } }),
+      );
+      return propostaAtivaId;
+    }
+  }
+
   const proposta = {
     id: `prop_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
     clientName: nomeCliente,
     createdAt: now,
     updatedAt: now,
+    origem: 'apresentacao-casas-ayahuasca',
     estado,
     resumo,
   };
@@ -1203,7 +1272,23 @@ function confirmarSalvarProposta() {
   propostaAtivaId = proposta.id;
   salvarPropostasNoStorage();
   atualizarPainelPropostas();
-  fecharModalSalvarProposta();
+  document.dispatchEvent(
+    new CustomEvent('aya:proposta-salva', { detail: { id: proposta.id, clientName: nomeCliente } }),
+  );
+  return proposta.id;
+}
+
+function salvarPropostaDaApresentacao() {
+  if (typeof window.ayaDeckCanSalvarProposta === 'function' && !window.ayaDeckCanSalvarProposta()) {
+    return false;
+  }
+  const nome = nomeCasaDaApresentacao();
+  if (!nome || nome.length < 2) {
+    abrirModalSalvarProposta();
+    return false;
+  }
+  persistirPropostaComNome(nome);
+  return true;
 }
 
 function criarNovaProposta() {
@@ -1265,7 +1350,14 @@ function init() {
   }
 
   const btnSalvar = document.getElementById('btn-salvar-proposta');
-  if (btnSalvar) btnSalvar.addEventListener('click', abrirModalSalvarProposta);
+  if (btnSalvar) {
+    btnSalvar.addEventListener('click', () => {
+      if (typeof window.ayaDeckCanSalvarProposta === 'function' && !window.ayaDeckCanSalvarProposta()) {
+        return;
+      }
+      abrirModalSalvarProposta();
+    });
+  }
   const btnEnviarFechamento = document.getElementById('btn-enviar-fechamento');
   if (btnEnviarFechamento) btnEnviarFechamento.addEventListener('click', enviarFechamentoAtual);
   const btnCancelarSalvar = document.getElementById('btn-cancelar-salvar');
@@ -1275,7 +1367,15 @@ function init() {
   const btnExcluir = document.getElementById('btn-excluir-proposta');
   if (btnExcluir) btnExcluir.addEventListener('click', excluirPropostaSelecionada);
   const btnNova = document.getElementById('btn-nova-proposta');
-  if (btnNova) btnNova.addEventListener('click', criarNovaProposta);
+  if (btnNova) {
+    btnNova.addEventListener('click', () => {
+      if (btnNova.dataset.mode === 'salvar') {
+        salvarPropostaDaApresentacao();
+        return;
+      }
+      criarNovaProposta();
+    });
+  }
 
   const selectPropostas = document.getElementById('propostas-select');
   if (selectPropostas) {
@@ -1312,18 +1412,64 @@ function init() {
   const params = new URLSearchParams(window.location.search);
   const propostaId = params.get('proposta');
   const fromApresentacao = params.get('from') === 'apresentacao';
-  if (propostaId) {
+  const embutidoNoDeck = Boolean(document.getElementById('deck-sim'));
+
+  if (propostaId && !embutidoNoDeck) {
     const fromDeck = propostasSalvas.find((p) => p.id === propostaId);
     if (fromDeck) {
       propostaAtivaId = fromDeck.id;
       aplicarEstadoFormulario(fromDeck.estado);
     }
   }
-  if (btnEnviarFechamento && (fromApresentacao || propostaAtivaId)) {
+  if (btnEnviarFechamento && (fromApresentacao || propostaAtivaId) && !embutidoNoDeck) {
     btnEnviarFechamento.hidden = false;
   }
 
   atualizarPainelPropostas();
+  wirePanelToggles();
+}
+
+function wirePanelToggles() {
+  const root = document.getElementById('deck-sim');
+  if (!root) return;
+  const buttons = root.querySelectorAll('[data-toggle-panel]');
+  for (let i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener('click', () => {
+      const id = buttons[i].getAttribute('data-toggle-panel');
+      const panel = document.getElementById(id);
+      if (!panel) return;
+      const collapsed = panel.classList.toggle('is-collapsed');
+      buttons[i].setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      const labelOpen =
+        id === 'panel-config' ? 'Abrir configuração' : 'Abrir resumo de presenças';
+      const labelClose =
+        id === 'panel-config' ? 'Fechar configuração' : 'Fechar resumo de presenças';
+      buttons[i].setAttribute('aria-label', collapsed ? labelOpen : labelClose);
+    });
+  }
 }
 
 init();
+
+window.AyaDeckSim = {
+  applyEstado: aplicarEstadoFormulario,
+  collectEstado: coletarEstadoFormulario,
+  render: function () {
+    renderCards();
+    pulsePrices();
+  },
+  getPropostaAtivaId: function () {
+    return propostaAtivaId;
+  },
+  setPropostaAtivaId: function (id) {
+    propostaAtivaId = id || null;
+    atualizarPainelPropostas();
+  },
+  refreshPropostas: function () {
+    propostasSalvas = carregarPropostasDoStorage();
+    atualizarPainelPropostas();
+  },
+  syncNomeCasa: function () {
+    atualizarPainelPropostas();
+  },
+};

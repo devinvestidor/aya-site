@@ -93,16 +93,13 @@
     <section class="summary" aria-live="polite">
       <p class="summary__line">
         <span class="summary__icon" aria-hidden="true">◎</span>
-        Você terá aproximadamente
+        Você tem
         <strong id="participantes-total">100</strong>
         presenças/mês
         <span class="summary__inline-hint">(trabalhos × pessoas por trabalho)</span>
       </p>
       <p class="summary__line summary__line--muted">
         Inclui até <strong id="mensalistas-limite-rec">—</strong> mensalistas no plano indicado.
-      </p>
-      <p class="summary__line summary__line--muted summary__line--fine">
-        Acima disso, valor proporcional ao crescimento da casa — a simulação usa a faixa de cada plano.
       </p>
       <p class="summary__line summary__line--muted summary__line--fine">
         Mensalistas participam em média de <strong id="summary-taxa-presenca-display">70</strong>% dos trabalhos —
@@ -147,6 +144,9 @@
     <section class="cards" id="cards-root" aria-label="Comparação de planos"></section>
 
     <div class="proposta-bar">
+      <button type="button" class="btn-proposta btn-proposta--solid" id="btn-enviar-fechamento" hidden>
+        Enviar ao fechamento
+      </button>
       <button type="button" class="btn-proposta" id="btn-salvar-proposta">Salvar proposta</button>
     </div>
 

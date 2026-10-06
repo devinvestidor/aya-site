@@ -14,6 +14,21 @@
       "source": "/eventos-conscientes",
       "destination": "/eventos-conscientes/",
       "permanent": true
+    },
+    {
+      "source": "/apresentacao",
+      "destination": "/apresentacao/",
+      "permanent": true
+    },
+    {
+      "source": "/apresentacao/casas-ayahuasca",
+      "destination": "/apresentacao/casas-ayahuasca/",
+      "permanent": true
+    },
+    {
+      "source": "/apresentacao/eventos-conscientes",
+      "destination": "/apresentacao/eventos-conscientes/",
+      "permanent": true
     }
   ]
 }
