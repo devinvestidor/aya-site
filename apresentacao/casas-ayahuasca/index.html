@@ -660,10 +660,14 @@
                 <select id="propostas-select" class="propostas-topo__select">
                   <option value="">Nenhuma proposta salva</option>
                 </select>
+                <input type="text" id="input-nome-proposta" class="propostas-topo__select" placeholder="Nome da proposta"
+                  hidden autocomplete="off" />
+                <button type="button" id="btn-salvar-alteracoes"
+                  class="propostas-topo__btn propostas-topo__btn--small" hidden>Salvar</button>
                 <button type="button" id="btn-excluir-proposta"
                   class="propostas-topo__btn propostas-topo__btn--danger propostas-topo__btn--small" hidden>Excluir</button>
                 <button type="button" id="btn-nova-proposta"
-                  class="propostas-topo__btn propostas-topo__btn--ghost">Nova</button>
+                  class="propostas-topo__btn propostas-topo__btn--ghost propostas-topo__btn--small">Nova</button>
               </div>
               <p id="proposta-atual-info" class="propostas-topo__meta">Nenhuma proposta ativa.</p>
             </section>

@@ -166,6 +166,10 @@
       taxaEl.value = calc.taxaPresenca;
     }
     if (calc.planoSelecionadoId) planoSelecionadoId = calc.planoSelecionadoId;
+    var apiPlano = sim();
+    if (apiPlano && typeof apiPlano.setPlanoEscolhido === 'function') {
+      apiPlano.setPlanoEscolhido(calc.planoSelecionadoId || null);
+    }
     if (calc.propostaAtivaId) {
       propostaAtivaId = calc.propostaAtivaId;
       var api = sim();
@@ -329,6 +333,11 @@
     applyEstadoToFields(found.estado);
     planoSelecionadoId =
       (found.resumo && found.resumo.planoId) || found.planoSelecionadoId || null;
+    var apiEscolha = sim();
+    if (apiEscolha && typeof apiEscolha.setPlanoEscolhido === 'function') {
+      apiEscolha.setPlanoEscolhido(planoSelecionadoId);
+    }
+    refreshSim();
     persistDraft();
     return true;
   }
@@ -751,11 +760,10 @@
     );
 
     document.addEventListener('aya:plano-selecionado', function (ev) {
-      if (ev && ev.detail && ev.detail.planId) {
-        planoSelecionadoId = ev.detail.planId;
-        persistDraft();
-        syncQualificacaoIntoPropostaAtiva();
-      }
+      if (!ev || !ev.detail) return;
+      planoSelecionadoId = ev.detail.planId || null;
+      persistDraft();
+      if (planoSelecionadoId) syncQualificacaoIntoPropostaAtiva();
     });
 
     var btnSalvar = document.getElementById('btn-salvar-proposta');

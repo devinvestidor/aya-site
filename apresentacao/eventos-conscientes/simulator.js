@@ -115,6 +115,8 @@ const PLUS_CREDIT_IDS = PLUS_ORDER;
 const PROPOSTAS_STORAGE_KEY = 'aya.planos-precos.propostas.v1';
 let propostasSalvas = [];
 let propostaAtivaId = null;
+let planoEscolhidoId = null;
+let modoNovaProposta = false;
 let estadoInicialFormulario = null;
 
 /**
@@ -482,6 +484,38 @@ function calcularTotalPlano(plan, participantes, mensalistas, plusIds = []) {
   return { total, extrasMensalistas, extrasIa, breakdown, cabeParticipantes: true };
 }
 
+/** Preço de tabela do tier (mensalidade + créditos de IA), mesmo acima do volume. */
+function cotarPlano(plan, participantes, _mensalistas, plusIds = []) {
+  const extrasIa = somaValorBonus(plusIds);
+  return {
+    total: plan.base + extrasIa,
+    extrasMensalistas: 0,
+    extrasIa,
+    breakdown: { base: plan.base, extrasMensalistas: 0, extrasIa },
+    cabeParticipantes: participantes <= plan.maxParticipants,
+  };
+}
+
+function planoEmFoco(recomendado) {
+  if (!planoEscolhidoId) return recomendado;
+  return PLANS.find((p) => p.id === planoEscolhidoId) || recomendado;
+}
+
+function textoFaixaPlanos(foco, recomendado) {
+  if (foco.id === recomendado.id) {
+    return `Plano em foco: ${foco.name}. Clique no card ao lado para descer ou subir.`;
+  }
+  return `Recomendado pelo volume: ${recomendado.name}. Em foco: ${foco.name}. Clique ao lado para descer ou subir.`;
+}
+
+function cotacaoDoPlanoEmFoco(estado) {
+  const participantes = participantesPorMes(estado.trabalhos, estado.pessoasPorTrabalho);
+  const rec = planoRecomendado(participantes, estado.mensalistas, estado.plusIds);
+  const plan = planoEmFoco(rec.plan);
+  const cotacao = cotarPlano(plan, participantes, estado.mensalistas, estado.plusIds);
+  return { plan, total: cotacao.total };
+}
+
 /**
  * Recomenda o plano mais barato que cabe em participantes e na faixa de mensalistas inclusos.
  * Se a quantidade de mensalistas passa do incluso, sobe de tier (sem alerta de proporcional).
@@ -593,9 +627,11 @@ function renderCards() {
   }
 
   const rec = planoRecomendado(participantes, mensalistas, plusIds);
-  const idx = indexPlano(rec.plan.id);
+  const foco = planoEmFoco(rec.plan);
+  const idx = indexPlano(foco.id);
+  const cotacaoFoco = cotarPlano(foco, participantes, mensalistas, plusIds);
 
-  const recRegra = regraMensalistasDoPlano(rec.plan);
+  const recRegra = regraMensalistasDoPlano(foco);
   const limiteMensalistas =
     recRegra.inclusos === Infinity ? 'ilimitados' : String(recRegra.inclusos);
   document.getElementById('mensalistas-limite-rec').textContent = limiteMensalistas;
@@ -606,29 +642,99 @@ function renderCards() {
     alertaLimite.textContent = '';
   }
 
-  if (rec.total !== null) {
-    logNegociacaoInterno(rec.plan.name, rec.total, plusIds);
-  }
+  logNegociacaoInterno(foco.name, cotacaoFoco.total, plusIds);
 
   const below = idx > 0 ? PLANS[idx - 1] : null;
   const above = idx < PLANS.length - 1 ? PLANS[idx + 1] : null;
 
   const sorted = [];
-  if (below) sorted.push({ plan: below, role: 'below' });
-  sorted.push({ plan: rec.plan, role: 'recommended' });
-  if (above) sorted.push({ plan: above, role: 'above' });
+  if (below) sorted.push({ plan: below, role: 'below', isRecommended: below.id === rec.plan.id });
+  sorted.push({ plan: foco, role: 'focus', isRecommended: foco.id === rec.plan.id });
+  if (above) sorted.push({ plan: above, role: 'above', isRecommended: above.id === rec.plan.id });
 
   const root = document.getElementById('cards-root');
   root.innerHTML = '';
-  root.append(
-    ...sorted.map((item) =>
-      createCard(item, participantes, mensalistas, {
-        plusIds,
-        receita,
-        totalPresencasMes: participantes,
-      }),
-    ),
+  if (document.getElementById('deck-sim')) {
+    const hint = document.createElement('p');
+    hint.className = 'cards__escolha';
+    hint.textContent = textoFaixaPlanos(foco, rec.plan);
+    root.appendChild(hint);
+  }
+  montarFaixaDePlanos(root, sorted, participantes, mensalistas, {
+    plusIds,
+    receita,
+    totalPresencasMes: participantes,
+  });
+  atualizarBotaoSalvarAlteracoes();
+}
+
+function montarFaixaDePlanos(root, sorted, participantes, mensalistas, extras) {
+  const noDeck = Boolean(document.getElementById('deck-sim'));
+  sorted.forEach((item, index) => {
+    const card = createCard(item, participantes, mensalistas, extras);
+    if (!noDeck) {
+      root.appendChild(card);
+      return;
+    }
+    const slot = document.createElement('div');
+    slot.className = 'cards__slot';
+    const naPontaEsquerda = index === 0 && item.role === 'below';
+    const naPontaDireita = index === sorted.length - 1 && item.role === 'above';
+    if (naPontaEsquerda) {
+      slot.classList.add('cards__slot--prev');
+      slot.appendChild(criarSetaNavegacao('prev', item.plan));
+    }
+    if (naPontaDireita) {
+      slot.classList.add('cards__slot--next');
+      slot.appendChild(criarSetaNavegacao('next', item.plan));
+    }
+    slot.appendChild(card);
+    root.appendChild(slot);
+  });
+}
+
+function criarSetaNavegacao(direcao, plan) {
+  const descer = direcao === 'prev';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.className = `cards__nav cards__nav--${direcao}`;
+  btn.setAttribute('aria-label', descer ? `Descer para ${plan.name}` : `Subir para ${plan.name}`);
+  btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" aria-hidden="true"><path d="${descer ? 'M14.5 5.5 8 12l6.5 6.5' : 'M9.5 5.5 16 12l-6.5 6.5'}" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+  btn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    escolherPlano(plan.id);
+  });
+  return btn;
+}
+
+function escolherPlano(planId) {
+  const plan = PLANS.find((p) => p.id === planId);
+  if (!plan) return;
+  planoEscolhidoId = plan.id;
+  const entradas = prepararEntradas();
+  const participantes = participantesPorMes(entradas.trabalhos, entradas.pessoasPorTrabalho);
+  const plusIds = getSelectedPlusIds();
+  const cotacao = cotarPlano(plan, participantes, entradas.mensalistas, plusIds);
+  document.dispatchEvent(
+    new CustomEvent('aya:plano-selecionado', {
+      detail: {
+        planId: plan.id,
+        name: plan.name,
+        valorTotal: cotacao.total,
+        licenca: plan.licenca,
+      },
+    }),
   );
+  if (propostaAtivaId) {
+    atualizarPropostaAtivaComEstado({
+      id: plan.id,
+      name: plan.name,
+      valorTotal: cotacao.total,
+      licenca: plan.licenca,
+    });
+  }
+  renderCards();
+  pulsePrices();
 }
 
 function appendLinhaExtrasIa(parent, extrasIa) {
@@ -639,21 +745,24 @@ function appendLinhaExtrasIa(parent, extrasIa) {
   parent.appendChild(line);
 }
 
-function createCard({ plan, role }, participantes, mensalistas, giftUi) {
+function createCard({ plan, role, isRecommended = false }, participantes, mensalistas, giftUi) {
   const { plusIds = [], receita, totalPresencasMes = 0 } = giftUi || {};
+  const embutidoNoDeck = Boolean(document.getElementById('deck-sim'));
+  const emFoco = role === 'focus';
+  const cotacao = cotarPlano(plan, participantes, mensalistas, plusIds);
+  const result = embutidoNoDeck ? cotacao : calcularTotalPlano(plan, participantes, mensalistas, plusIds);
+  const insufficient = !cotacao.cabeParticipantes;
+  const exibirPreco = result.total != null;
+
   const article = document.createElement('article');
   article.className = 'plan-card';
-  if (role === 'recommended') article.classList.add('plan-card--recommended');
-
-  const result = calcularTotalPlano(plan, participantes, mensalistas, plusIds);
-  const insufficient = !result.cabeParticipantes;
-
+  if (emFoco) article.classList.add('plan-card--recommended');
   if (insufficient) article.classList.add('plan-card--insufficient');
 
-  if (role === 'recommended') {
+  if (emFoco) {
     const badge = document.createElement('span');
     badge.className = 'plan-card__badge';
-    badge.textContent = 'Recomendado';
+    badge.textContent = isRecommended ? 'Recomendado' : 'Escolhido';
     article.appendChild(badge);
   }
 
@@ -663,9 +772,15 @@ function createCard({ plan, role }, participantes, mensalistas, giftUi) {
 
   const tag = document.createElement('p');
   tag.className = 'plan-card__tag';
-  if (role === 'below') tag.textContent = 'Plano abaixo';
-  else if (role === 'above') tag.textContent = 'Plano acima (upsell)';
-  else tag.textContent = 'Melhor custo para o seu volume';
+  if (role === 'below') {
+    tag.textContent = isRecommended ? 'Clique para voltar ao recomendado' : 'Clique para descer';
+  } else if (role === 'above') {
+    tag.textContent = isRecommended ? 'Clique para voltar ao recomendado' : 'Clique para subir';
+  } else if (isRecommended) {
+    tag.textContent = 'Melhor custo para o seu volume';
+  } else {
+    tag.textContent = 'Escolhido para esta negociação';
+  }
 
   const descricaoPlano = getPlanoDescricao(plan.id);
 
@@ -680,17 +795,19 @@ function createCard({ plan, role }, participantes, mensalistas, giftUi) {
     tag.classList.add('plan-card__tag--no-descricao');
   }
 
-  const rowP = row('Participantes', plan.participantsLabel);
+  const participantesAcima = plan.maxParticipants !== Infinity && participantes > plan.maxParticipants;
+  const rowP = row('Participantes', plan.participantsLabel, participantes, participantesAcima);
   const rowU = row('Usuários', plan.maxUsers === Infinity ? 'Ilimitados' : `até ${plan.maxUsers}`);
   const regraM = regraMensalistasDoPlano(plan);
   const mensInc =
     regraM.inclusos === Infinity ? 'Ilimitados' : `até ${regraM.inclusos}`;
-  const rowM = row('Mensalistas inclusos', mensInc);
+  const mensalistasAcima = regraM.inclusos !== Infinity && mensalistas > regraM.inclusos;
+  const rowM = row('Mensalistas inclusos', mensInc, mensalistas, mensalistasAcima);
   article.appendChild(rowP);
   article.appendChild(rowU);
   article.appendChild(rowM);
 
-  if (!insufficient) {
+  if (exibirPreco) {
     article.appendChild(createGiftSection(plusIds));
   }
 
@@ -704,7 +821,7 @@ function createCard({ plan, role }, participantes, mensalistas, giftUi) {
   const stack = document.createElement('div');
   stack.className = 'plan-card__price-stack';
 
-  if (insufficient) {
+  if (!exibirPreco) {
     const pv = document.createElement('div');
     pv.className = 'plan-card__price-value plan-card__price-value--empty';
     pv.textContent = '—';
@@ -764,7 +881,7 @@ function createCard({ plan, role }, participantes, mensalistas, giftUi) {
 
   article.appendChild(priceWrap);
 
-  if (!insufficient && receita) {
+  if (exibirPreco && receita) {
     const resumo = criarElementoResumoOperacao(receita, result.total);
     if (resumo) article.appendChild(resumo);
   }
@@ -772,12 +889,12 @@ function createCard({ plan, role }, participantes, mensalistas, giftUi) {
   if (insufficient) {
     const w = document.createElement('p');
     w.className = 'plan-card__warn';
-    w.textContent =
-      'Participantes/mês acima do limite deste plano. Suba de tier ou ajuste trabalhos, participantes ou mensalistas.';
+    w.textContent = embutidoNoDeck
+      ? 'Volume acima do limite deste plano. O valor deste card vale para a negociação.'
+      : 'Participantes/mês acima do limite deste plano. Suba de tier ou ajuste trabalhos, participantes ou mensalistas.';
     article.appendChild(w);
   }
 
-  const embutidoNoDeck = Boolean(document.getElementById('deck-sim'));
   if (!embutidoNoDeck) {
     const btn = document.createElement('button');
     btn.type = 'button';
@@ -792,9 +909,27 @@ function createCard({ plan, role }, participantes, mensalistas, giftUi) {
       alert(`Registrado na conversa: ${getCTA(plan.id)}\n${label}\n(Cole no CRM ou proposta.)`);
     });
     article.appendChild(btn);
-  } else if (!insufficient && role === 'recommended') {
-    // No deck, o plano recomendado fica marcado visualmente — sem CTA "Quero…".
+  } else if (emFoco) {
     article.dataset.planId = plan.id;
+    article.setAttribute('aria-current', 'true');
+  } else {
+    article.classList.add('plan-card--selectable');
+    article.tabIndex = 0;
+    article.setAttribute('role', 'button');
+    const acao = role === 'below' ? `Descer para ${plan.name}` : `Subir para ${plan.name}`;
+    article.setAttribute('aria-label', acao);
+    const cue = document.createElement('p');
+    cue.className = 'plan-card__cue';
+    cue.textContent = 'Usar este plano';
+    article.appendChild(cue);
+    const onChoose = () => escolherPlano(plan.id);
+    article.addEventListener('click', onChoose);
+    article.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      event.stopPropagation();
+      onChoose();
+    });
   }
 
   return article;
@@ -848,7 +983,7 @@ function createGiftSection(plusIds) {
   return wrap;
 }
 
-function row(label, value) {
+function row(label, value, informado, acima) {
   const wrap = document.createElement('div');
   wrap.className = 'plan-card__row';
   const l = document.createElement('span');
@@ -857,6 +992,13 @@ function row(label, value) {
   const v = document.createElement('span');
   v.className = 'plan-card__value';
   v.textContent = value;
+  if (informado > 0) {
+    const tom = acima ? 'plan-card__value-informado--acima' : 'plan-card__value-informado--dentro';
+    const extra = document.createElement('span');
+    extra.className = `plan-card__value-informado ${tom}`;
+    extra.textContent = ` (${informado})`;
+    v.appendChild(extra);
+  }
   wrap.appendChild(l);
   wrap.appendChild(v);
   return wrap;
@@ -1003,7 +1145,6 @@ function aplicarEstadoFormulario(estado) {
 }
 
 function montarResumoProposta(estado) {
-  const participantes = participantesPorMes(estado.trabalhos, estado.pessoasPorTrabalho);
   const det = receitaTotalDetalhado({
     trabalhos: estado.trabalhos,
     media: estado.pessoasPorTrabalho,
@@ -1013,17 +1154,128 @@ function montarResumoProposta(estado) {
     valorMax: estado.valorMaxParticipante,
     taxaPresenca: estado.taxaPresencaPct,
   });
-  const rec = planoRecomendado(participantes, estado.mensalistas, estado.plusIds);
+  const foco = cotacaoDoPlanoEmFoco(estado);
   return {
-    plano: rec.plan.name,
-    valorPlano: rec.total ?? 0,
-    licenca: rec.plan.licenca ?? 0,
+    plano: foco.plan.name,
+    planoId: foco.plan.id,
+    valorPlano: foco.total ?? 0,
+    licenca: foco.plan.licenca ?? 0,
     receitaMedia: det.total,
   };
 }
 
 function nomeCasaDaApresentacao() {
   return document.getElementById('field-cliente')?.value?.trim() || '';
+}
+
+function estadoCalculadoIgual(atual, salvo) {
+  const campos = [
+    'trabalhos',
+    'pessoasPorTrabalho',
+    'mensalistas',
+    'valorMinParticipante',
+    'valorMaxParticipante',
+    'valorMensalista',
+    'taxaPresencaPct',
+  ];
+  const numeroDifere = campos.some((campo) => Number(atual[campo] ?? 0) !== Number(salvo[campo] ?? 0));
+  if (numeroDifere) return false;
+  const plusAtual = Array.isArray(atual.plusIds) ? atual.plusIds.join(',') : '';
+  const plusSalvo = Array.isArray(salvo.plusIds) ? salvo.plusIds.join(',') : '';
+  return plusAtual === plusSalvo;
+}
+
+function propostaComAlteracaoPendente() {
+  if (!propostaAtivaId) return false;
+  const proposta = propostasSalvas.find((p) => p.id === propostaAtivaId);
+  if (!proposta) return false;
+  if (!proposta.estado) return true;
+  return !estadoCalculadoIgual(coletarEstadoFormulario(), proposta.estado);
+}
+
+function atualizarBotaoSalvarAlteracoes() {
+  const btn = document.getElementById('btn-salvar-alteracoes');
+  if (!btn) return;
+  const noDeck = Boolean(document.getElementById('deck-sim'));
+  const pendente = noDeck && (modoNovaProposta || propostaComAlteracaoPendente());
+  btn.hidden = !pendente;
+  atualizarCampoNomeProposta();
+}
+
+function atualizarCampoNomeProposta() {
+  const input = document.getElementById('input-nome-proposta');
+  const select = document.getElementById('propostas-select');
+  const label = document.querySelector('label[for="propostas-select"], label[for="input-nome-proposta"]');
+  if (!input) return;
+  const editandoNome = Boolean(document.getElementById('deck-sim')) && modoNovaProposta && !propostaAtivaId;
+  input.hidden = !editandoNome;
+  if (select) select.hidden = editandoNome;
+  if (label) {
+    label.textContent = editandoNome ? 'Nome da proposta' : 'Propostas salvas';
+    label.setAttribute('for', editandoNome ? 'input-nome-proposta' : 'propostas-select');
+  }
+  if (editandoNome) {
+    const info = document.getElementById('proposta-atual-info');
+    if (info) info.textContent = 'Digite o nome e clique em Salvar.';
+  }
+}
+
+function aplicarNomeNoDeck(nome) {
+  const cliente = document.getElementById('field-cliente');
+  if (!cliente) return;
+  cliente.value = nome;
+  cliente.dispatchEvent(new Event('input', { bubbles: true }));
+}
+
+function definirErroProposta(mensagem) {
+  const erro = document.getElementById('proposta-error');
+  if (!erro) return;
+  if (!mensagem) {
+    erro.hidden = true;
+    erro.textContent = '';
+    return;
+  }
+  erro.hidden = false;
+  erro.textContent = mensagem;
+}
+
+function nomeParaSalvarPropostaAtiva() {
+  const nomeNaTela = nomeCasaDaApresentacao();
+  if (nomeNaTela.length >= 2) return nomeNaTela;
+  const ativa = propostasSalvas.find((p) => p.id === propostaAtivaId);
+  const nomeSalvo = ativa?.clientName?.trim() || '';
+  const cliente = document.getElementById('field-cliente');
+  if (cliente && nomeSalvo.length >= 2) cliente.value = nomeSalvo;
+  return nomeSalvo;
+}
+
+function salvarAlteracoesDaProposta() {
+  if (modoNovaProposta) {
+    const nome = document.getElementById('input-nome-proposta')?.value?.trim() || '';
+    if (nome.length < 2) {
+      document.getElementById('input-nome-proposta')?.focus();
+      const info = document.getElementById('proposta-atual-info');
+      if (info) info.textContent = 'Informe o nome da proposta para salvar.';
+      return false;
+    }
+    aplicarNomeNoDeck(nome);
+    persistirPropostaComNome(nome);
+    modoNovaProposta = false;
+    definirErroProposta('');
+    atualizarPainelPropostas();
+    return true;
+  }
+  const nome = nomeParaSalvarPropostaAtiva();
+  if (typeof window.ayaDeckCanSalvarProposta === 'function' && !window.ayaDeckCanSalvarProposta()) {
+    return false;
+  }
+  if (!nome || nome.length < 2) {
+    abrirModalSalvarProposta();
+    return false;
+  }
+  persistirPropostaComNome(nome);
+  atualizarBotaoSalvarAlteracoes();
+  return true;
 }
 
 function atualizarBotaoNovaSalvar() {
@@ -1071,6 +1323,7 @@ function atualizarPainelPropostas() {
     btnExcluir.disabled = true;
     btnExcluir.hidden = true;
     atualizarBotaoNovaSalvar();
+    atualizarBotaoSalvarAlteracoes();
     return;
   }
 
@@ -1105,6 +1358,7 @@ function atualizarPainelPropostas() {
   }
 
   atualizarBotaoNovaSalvar();
+  atualizarBotaoSalvarAlteracoes();
 }
 
 function carregarPropostaSelecionada() {
@@ -1113,6 +1367,11 @@ function carregarPropostaSelecionada() {
   const proposta = propostasSalvas.find((p) => p.id === select.value);
   if (!proposta) return;
   propostaAtivaId = proposta.id;
+  modoNovaProposta = false;
+  planoEscolhidoId = proposta.planoSelecionadoId || proposta.resumo?.planoId || null;
+  document.dispatchEvent(
+    new CustomEvent('aya:plano-selecionado', { detail: { planId: planoEscolhidoId } }),
+  );
   aplicarEstadoFormulario(proposta.estado);
   atualizarPainelPropostas();
 }
@@ -1207,15 +1466,14 @@ function enviarFechamentoAtual() {
     return;
   }
   const estado = coletarEstadoFormulario();
-  const participantes = participantesPorMes(estado.trabalhos, estado.pessoasPorTrabalho);
-  const rec = planoRecomendado(participantes, estado.mensalistas, estado.plusIds);
-  const ok = enviarPlanoAoFechamento(rec.plan, rec.total);
+  const foco = cotacaoDoPlanoEmFoco(estado);
+  const ok = enviarPlanoAoFechamento(foco.plan, foco.total);
   if (!ok) {
     atualizarPropostaAtivaComEstado({
-      id: rec.plan.id,
-      name: rec.plan.name,
-      valorTotal: rec.total,
-      licenca: rec.plan.licenca,
+      id: foco.plan.id,
+      name: foco.plan.name,
+      valorTotal: foco.total,
+      licenca: foco.plan.licenca,
     });
     window.location.href = urlFechamentoApresentacao(propostaAtivaId);
   }
@@ -1293,6 +1551,9 @@ function salvarPropostaDaApresentacao() {
 
 function criarNovaProposta() {
   propostaAtivaId = null;
+  planoEscolhidoId = null;
+  modoNovaProposta = true;
+  document.dispatchEvent(new CustomEvent('aya:plano-selecionado', { detail: { planId: null } }));
   const trabalhosEl = document.getElementById('trabalhos');
   const pessoasEl = document.getElementById('pessoas-por-trabalho');
   const mensalistasEl = document.getElementById('mensalistas-qtd');
@@ -1310,6 +1571,8 @@ function criarNovaProposta() {
   if (mensalistaValorEl) mensalistaValorEl.value = '';
   if (taxaEl) taxaEl.value = '';
   if (nomeClienteEl) nomeClienteEl.value = '';
+  const nomePropostaEl = document.getElementById('input-nome-proposta');
+  if (nomePropostaEl) nomePropostaEl.value = '';
 
   aplicarSelectCreditos(new Set());
 
@@ -1317,7 +1580,8 @@ function criarNovaProposta() {
   renderCards();
   pulsePrices();
   atualizarPainelPropostas();
-  trabalhosEl?.focus();
+  if (nomePropostaEl) nomePropostaEl.focus();
+  else trabalhosEl?.focus();
 }
 
 function init() {
@@ -1367,6 +1631,21 @@ function init() {
   const btnExcluir = document.getElementById('btn-excluir-proposta');
   if (btnExcluir) btnExcluir.addEventListener('click', excluirPropostaSelecionada);
   const btnNova = document.getElementById('btn-nova-proposta');
+  const btnSalvarAlteracoes = document.getElementById('btn-salvar-alteracoes');
+  if (btnSalvarAlteracoes) {
+    btnSalvarAlteracoes.addEventListener('click', () => {
+      salvarAlteracoesDaProposta();
+    });
+  }
+  const nomePropostaInput = document.getElementById('input-nome-proposta');
+  if (nomePropostaInput) {
+    nomePropostaInput.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter') return;
+      event.preventDefault();
+      event.stopPropagation();
+      salvarAlteracoesDaProposta();
+    });
+  }
   if (btnNova) {
     btnNova.addEventListener('click', () => {
       if (btnNova.dataset.mode === 'salvar') {
@@ -1471,5 +1750,8 @@ window.AyaDeckSim = {
   },
   syncNomeCasa: function () {
     atualizarPainelPropostas();
+  },
+  setPlanoEscolhido: function (id) {
+    planoEscolhidoId = id || null;
   },
 };
