@@ -498,8 +498,15 @@ body {
 
 .deck__accordion-body {
   padding: 0.75rem 0.85rem 0.9rem;
-  max-height: min(36vh, 18rem);
+  max-height: min(52vh, 28rem);
   overflow: auto;
+}
+
+.deck__summary-edit-hint {
+  margin: 0 0 0.65rem;
+  font-size: 0.8rem;
+  line-height: 1.4;
+  color: var(--deck-muted);
 }
 
 .deck__summary-grid {
@@ -524,12 +531,14 @@ body {
   grid-template-columns: 1fr;
 }
 
-.deck__summary-row--2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
+@media (min-width: 640px) {
+  .deck__summary-row--2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 
-.deck__summary-row--3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  .deck__summary-row--3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
 }
 
 .deck__summary-row .deck__summary-item {
@@ -537,11 +546,49 @@ body {
 }
 
 .deck__summary-item {
+  display: block;
   margin: 0;
   padding: 0.55rem 0.65rem;
   border-radius: 10px;
   background: color-mix(in srgb, var(--deck-surface-950) 40%, transparent);
   border: 1px solid color-mix(in srgb, var(--deck-border) 80%, transparent);
+  cursor: text;
+}
+
+.deck__summary-input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  margin: 0.2rem 0 0;
+  padding: 0.35rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--deck-border) 85%, transparent);
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--deck-surface-900) 75%, transparent);
+  color: var(--deck-text);
+  font: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  line-height: 1.4;
+  outline: none;
+  resize: vertical;
+}
+
+.deck__summary-input:focus {
+  border-color: color-mix(in srgb, var(--deck-primary) 65%, var(--deck-border));
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--deck-primary) 18%, transparent);
+}
+
+.deck__summary-input::placeholder {
+  color: color-mix(in srgb, var(--deck-muted) 70%, transparent);
+  font-weight: 400;
+}
+
+textarea.deck__summary-input {
+  min-height: 2.5rem;
+}
+
+select.deck__summary-input {
+  cursor: pointer;
 }
 
 .deck__summary-item dt,
@@ -593,6 +640,21 @@ body {
   max-width: 100%;
   height: auto;
   max-height: min(52vh, 28rem);
+}
+
+.deck__slide--origin .deck__title {
+  text-align: center;
+}
+
+.deck__logo-mark {
+  margin: 2.25rem auto 0;
+  width: min(78%, 28rem);
+}
+
+.deck__logo-mark img {
+  display: block;
+  width: 100%;
+  height: auto;
 }
 
 .deck__teaser-layout {

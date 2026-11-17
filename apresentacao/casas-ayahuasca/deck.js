@@ -539,110 +539,319 @@
       .replace(/"/g, '&quot;');
   }
 
-  function summaryItem(label, value, wide) {
+  function chipValues(qualifyKey) {
+    var group = viewport.querySelector('[data-qualify="' + qualifyKey + '"]');
+    if (!group) return [];
+    var chips = group.querySelectorAll('.deck__chip');
+    var values = [];
+    for (var i = 0; i < chips.length; i++) {
+      var value = chips[i].getAttribute('data-value');
+      if (value) values.push(value);
+    }
+    return values;
+  }
+
+  function summaryOption(value, label, selected) {
     return (
-      '<div class="deck__summary-item' +
-      (wide ? ' deck__summary-item--wide' : '') +
-      '"><p class="deck__summary-item-label">' +
-      escapeHtml(label) +
-      '</p><p class="deck__summary-item-value">' +
+      '<option value="' +
       escapeHtml(value) +
-      '</p></div>'
+      '"' +
+      (value === selected ? ' selected' : '') +
+      '>' +
+      escapeHtml(label) +
+      '</option>'
     );
+  }
+
+  function mensalistasSelectedValue() {
+    if (answers.mensalistas === 'Não') return 'Não';
+    if (answers.mensalistas !== 'Sim') return '';
+    if (answers.mensalistas_qtd) return 'Sim|' + answers.mensalistas_qtd;
+    return 'Sim';
+  }
+
+  function mensalistasOptionsHtml() {
+    var selected = mensalistasSelectedValue();
+    var html = summaryOption('', 'Selecione', selected);
+    html += summaryOption('Não', 'Não', selected);
+    html += summaryOption('Sim', 'Sim', selected);
+    var qtys = chipValues('mensalistas_qtd');
+    for (var i = 0; i < qtys.length; i++) {
+      html += summaryOption('Sim|' + qtys[i], 'Sim · ' + qtys[i], selected);
+    }
+    return html;
+  }
+
+  function summaryControl(key, kind, value, extra) {
+    var attrs = ' class="deck__summary-input" data-summary="' + key + '" autocomplete="off"';
+    if (kind === 'select') return '<select' + attrs + '>' + extra.options + '</select>';
+    if (kind === 'textarea') {
+      return (
+        '<textarea' +
+        attrs +
+        ' rows="2" maxlength="' +
+        extra.max +
+        '"' +
+        (extra.placeholder ? ' placeholder="' + escapeHtml(extra.placeholder) + '"' : '') +
+        '>' +
+        escapeHtml(value) +
+        '</textarea>'
+      );
+    }
+    return (
+      '<input' +
+      attrs +
+      ' type="text" maxlength="' +
+      extra.max +
+      '" value="' +
+      escapeHtml(value) +
+      '"' +
+      (extra.placeholder ? ' placeholder="' + escapeHtml(extra.placeholder) + '"' : '') +
+      (extra.inputmode ? ' inputmode="' + extra.inputmode + '"' : '') +
+      ' />'
+    );
+  }
+
+  function summaryField(label, key, kind, value, wide, extra) {
+    return (
+      '<label class="deck__summary-item' +
+      (wide ? ' deck__summary-item--wide' : '') +
+      '"><span class="deck__summary-item-label">' +
+      escapeHtml(label) +
+      '</span>' +
+      summaryControl(key, kind, value, extra || {}) +
+      '</label>'
+    );
+  }
+
+  function summaryFilledCount() {
+    var count = 0;
+    if (clienteEl && clienteEl.value.trim()) count += 1;
+    if (presentesEl && presentesEl.value.trim()) count += 1;
+    if (answers.trabalhos) count += 1;
+    if (answers.pessoas) count += 1;
+    if (answers.mensalistas === 'Sim' || answers.mensalistas === 'Não') count += 1;
+    if (answers.contexto && answers.contexto.length) count += 1;
+    if (dorEl && dorEl.value.trim()) count += 1;
+    if (dorParticipanteEl && dorParticipanteEl.value.trim()) count += 1;
+    return count;
+  }
+
+  function updateSummaryCount() {
+    if (!summaryCountEl) return;
+    var count = summaryFilledCount();
+    summaryCountEl.hidden = count === 0;
+    summaryCountEl.textContent = count ? String(count) : '';
   }
 
   function renderSummary() {
     if (!summaryEl) return;
-    var items = [];
-    var count = 0;
-
-    var headerBits = [];
-    var nomeCasa = clienteEl ? clienteEl.value.trim() : '';
-    if (nomeCasa) {
-      headerBits.push(summaryItem('Nome da casa', nomeCasa));
-      count += 1;
+    if (summaryEl.contains(document.activeElement)) {
+      updateSummaryCount();
+      return;
     }
 
-    var presentes = presentesEl ? presentesEl.value.trim() : '';
-    if (presentes) {
-      headerBits.push(summaryItem('Presentes', presentes));
-      count += 1;
-    }
-    if (headerBits.length) {
-      items.push(
-        '<div class="deck__summary-row deck__summary-row--2 deck__summary-item--wide">' +
-          headerBits.join('') +
-          '</div>'
-      );
-    }
+    var nomeCasa = clienteEl ? clienteEl.value : '';
+    var presentes = presentesEl ? presentesEl.value : '';
+    var dor = dorEl ? dorEl.value : '';
+    var dorPart = dorParticipanteEl ? dorParticipanteEl.value : '';
+    var pessoas = answers.pessoas != null && answers.pessoas !== '' ? String(answers.pessoas) : '';
 
-    var volumeBits = [];
-    if (answers.trabalhos) {
-      volumeBits.push(summaryItem('Trabalhos / mês', answers.trabalhos));
-      count += 1;
-    }
-    if (answers.pessoas) {
-      volumeBits.push(summaryItem('Pessoas / trabalho', answers.pessoas));
-      count += 1;
-    }
-    if (answers.mensalistas === 'Sim') {
-      volumeBits.push(
-        summaryItem(
-          'Mensalistas',
-          answers.mensalistas_qtd ? 'Sim · ' + answers.mensalistas_qtd : 'Sim'
-        )
-      );
-      count += 1;
-    } else if (answers.mensalistas === 'Não') {
-      volumeBits.push(summaryItem('Mensalistas', 'Não'));
-      count += 1;
-    }
-    if (volumeBits.length) {
-      items.push(
-        '<div class="deck__summary-row deck__summary-row--3 deck__summary-item--wide">' +
-          volumeBits.join('') +
-          '</div>'
-      );
-    }
+    var html =
+      '<div class="deck__summary-row deck__summary-row--2 deck__summary-item--wide">' +
+      summaryField('Nome da casa', 'nome', 'text', nomeCasa, false, {
+        max: 120,
+        placeholder: 'Ex.: Casa Aurora',
+      }) +
+      summaryField('Presentes', 'presentes', 'text', presentes, false, {
+        max: 800,
+        placeholder: 'Quem está na conversa',
+      }) +
+      '</div>' +
+      '<div class="deck__summary-row deck__summary-row--3 deck__summary-item--wide">' +
+      summaryField('Trabalhos / mês', 'trabalhos', 'text', answers.trabalhos || '', false, {
+        max: 8,
+        placeholder: 'Ex.: 2',
+        inputmode: 'numeric',
+      }) +
+      summaryField('Pessoas / trabalho', 'pessoas', 'text', pessoas, false, {
+        max: 6,
+        placeholder: 'Ex.: 40',
+        inputmode: 'numeric',
+      }) +
+      summaryField('Mensalistas', 'mensalistas', 'select', '', false, {
+        options: mensalistasOptionsHtml(),
+      }) +
+      '</div>' +
+      summaryField('Hoje usam', 'contexto', 'text', formatContextoLabels(), true, {
+        max: 240,
+        placeholder: 'Ex.: WhatsApp, Planilha',
+      }) +
+      '<div class="deck__summary-row deck__summary-row--2 deck__summary-item--wide">' +
+      summaryField('Dificuldade da casa', 'dor', 'textarea', dor, false, {
+        max: 400,
+        placeholder: 'Ex.: pagar as contas',
+      }) +
+      summaryField('Dificuldade do participante', 'dorPart', 'textarea', dorPart, false, {
+        max: 400,
+        placeholder: 'Ex.: inscrição',
+      }) +
+      '</div>';
 
-    if (answers.contexto && answers.contexto.length) {
-      items.push(summaryItem('Hoje usam', formatContextoLabels(), true));
-      count += 1;
-    }
+    summaryEl.innerHTML = html;
+    updateSummaryCount();
+  }
 
-    var dorBits = [];
-    var dor = dorEl ? dorEl.value.trim() : '';
-    if (dor) {
-      dorBits.push(summaryItem('Dificuldade da casa', dor));
-      count += 1;
-    }
-
-    var dorPart = dorParticipanteEl ? dorParticipanteEl.value.trim() : '';
-    if (dorPart) {
-      dorBits.push(summaryItem('Dificuldade do participante', dorPart));
-      count += 1;
-    }
-    if (dorBits.length) {
-      items.push(
-        '<div class="deck__summary-row deck__summary-row--2 deck__summary-item--wide">' +
-          dorBits.join('') +
-          '</div>'
-      );
-    }
-
-    summaryEl.innerHTML = items.length
-      ? items.join('')
-      : '<p class="deck__summary-empty">As respostas da qualificação aparecem aqui conforme a conversa avança.</p>';
-
-    if (summaryCountEl) {
-      if (count) {
-        summaryCountEl.hidden = false;
-        summaryCountEl.textContent = String(count);
-      } else {
-        summaryCountEl.hidden = true;
-        summaryCountEl.textContent = '';
+  function applyMensalistasFromSummary(raw) {
+    var value = String(raw || '');
+    if (value === 'Não') {
+      answers.mensalistas = 'Não';
+      delete answers.mensalistas_qtd;
+      if (mensalistasQtdEl) mensalistasQtdEl.value = '0';
+    } else if (value === 'Sim') {
+      answers.mensalistas = 'Sim';
+      delete answers.mensalistas_qtd;
+      if (mensalistasQtdEl) mensalistasQtdEl.value = '';
+    } else if (value.indexOf('Sim|') === 0) {
+      answers.mensalistas = 'Sim';
+      answers.mensalistas_qtd = value.slice(4);
+      if (mensalistasQtdEl) {
+        mensalistasQtdEl.value = String(mapMensalistasQtd(answers.mensalistas_qtd));
       }
+    } else {
+      delete answers.mensalistas;
+      delete answers.mensalistas_qtd;
+      if (mensalistasQtdEl) mensalistasQtdEl.value = '';
     }
+    restoreChipSelections();
+    refreshSim();
+    persistDraft();
+  }
+
+  function applyTrabalhosFromSummary(raw) {
+    var value = String(raw || '').trim();
+    if (value) answers.trabalhos = value;
+    else delete answers.trabalhos;
+    if (trabalhosEl) {
+      var mapped = value ? mapTrabalhos(value) : 0;
+      trabalhosEl.value = mapped > 0 ? String(mapped) : '';
+    }
+    restoreChipSelections();
+    refreshSim();
+    persistDraft();
+  }
+
+  function applyPessoasFromSummary(raw) {
+    var value = String(raw || '').trim();
+    if (!value) {
+      delete answers.pessoas;
+      if (pessoasQualEl) pessoasQualEl.value = '';
+      if (pessoasEl) pessoasEl.value = '';
+      refreshSim();
+      persistDraft();
+      return;
+    }
+    answers.pessoas = value;
+    var n = mapPessoas(value);
+    if (pessoasQualEl) pessoasQualEl.value = n > 0 ? String(n) : '';
+    if (pessoasEl) pessoasEl.value = n > 0 ? String(n) : '';
+    refreshSim();
+    persistDraft();
+  }
+
+  function knownContextoToken(part) {
+    var tools = chipValues('contexto');
+    for (var i = 0; i < tools.length; i++) {
+      if (tools[i].toLowerCase() === part.toLowerCase()) return tools[i];
+    }
+    return '';
+  }
+
+  function parseContextoSummary(raw, commit) {
+    var text = String(raw || '');
+    var parts = text.split(',');
+    if (!commit && parts.length && text.trim().slice(-1) !== ',') {
+      var tail = parts[parts.length - 1].trim();
+      var finishedOutro = /^outro\s*:\s*\S/i.test(tail);
+      if (tail && !knownContextoToken(tail) && !finishedOutro) parts.pop();
+    }
+    var list = [];
+    var outros = [];
+    for (var i = 0; i < parts.length; i++) {
+      var part = parts[i].trim();
+      if (!part) continue;
+      var known = knownContextoToken(part);
+      if (known && known !== 'Outro') {
+        if (list.indexOf(known) < 0) list.push(known);
+        continue;
+      }
+      var outroPrefix = part.match(/^outro\s*:\s*(.*)$/i);
+      if (list.indexOf('Outro') < 0) list.push('Outro');
+      if (outroPrefix && outroPrefix[1].trim()) outros.push(outroPrefix[1].trim());
+      else if (part.toLowerCase() !== 'outro') outros.push(part);
+    }
+    return { list: list, outro: outros.join(', ') };
+  }
+
+  function applyContextoFromSummary(raw, commit) {
+    var parsed = parseContextoSummary(raw, commit);
+    answers.contexto = parsed.list;
+    answers.contextoOutro = parsed.outro;
+    if (contextoOutroEl) contextoOutroEl.value = parsed.outro;
+    restoreChipSelections();
+  }
+
+  function applySummaryValue(key, raw, commit) {
+    if (key === 'nome' && clienteEl) {
+      clienteEl.value = String(raw || '');
+      var api = sim();
+      if (api && typeof api.syncNomeCasa === 'function') api.syncNomeCasa();
+    } else if (key === 'presentes') {
+      if (presentesEl) presentesEl.value = String(raw || '');
+      answers.presentes = String(raw || '').trim();
+    } else if (key === 'trabalhos') {
+      applyTrabalhosFromSummary(raw);
+    } else if (key === 'pessoas') {
+      applyPessoasFromSummary(raw);
+    } else if (key === 'mensalistas') {
+      applyMensalistasFromSummary(raw);
+    } else if (key === 'contexto') {
+      applyContextoFromSummary(raw, commit);
+    } else if (key === 'dor') {
+      if (dorEl) dorEl.value = String(raw || '');
+      answers.dor = String(raw || '').trim();
+    } else if (key === 'dorPart') {
+      if (dorParticipanteEl) dorParticipanteEl.value = String(raw || '');
+      answers.dorParticipante = String(raw || '').trim();
+    }
+    updateSummaryCount();
+    persistDraft();
+  }
+
+  function wireSummaryEdits() {
+    if (!summaryEl || summaryEl.getAttribute('data-wired') === 'true') return;
+    summaryEl.setAttribute('data-wired', 'true');
+    summaryEl.addEventListener('input', function (e) {
+      var el = e.target;
+      if (!el || !el.getAttribute) return;
+      var key = el.getAttribute('data-summary');
+      if (!key) return;
+      applySummaryValue(key, el.value, false);
+    });
+    summaryEl.addEventListener('change', function (e) {
+      var el = e.target;
+      if (!el || !el.getAttribute) return;
+      if (el.getAttribute('data-summary') !== 'mensalistas') return;
+      applySummaryValue('mensalistas', el.value, true);
+    });
+    summaryEl.addEventListener('focusout', function (e) {
+      var el = e.target;
+      if (!el || !el.getAttribute) return;
+      if (el.getAttribute('data-summary') !== 'contexto') return;
+      applySummaryValue('contexto', el.value, true);
+      var canonical = formatContextoLabels();
+      if (el.value !== canonical) el.value = canonical;
+    });
   }
 
   function setSingleAnswer(key, value, chipEl, group) {
@@ -690,6 +899,10 @@
           }
 
           setSingleAnswer(key, value, chip, group);
+          if (key === 'trabalhos') applyTrabalhosFromSummary(value);
+          if (key === 'mensalistas' || key === 'mensalistas_qtd') {
+            applyMensalistasFromSummary(mensalistasSelectedValue());
+          }
 
           var revealId = chip.getAttribute('data-reveal');
           var hideId = chip.getAttribute('data-hide');
@@ -727,14 +940,8 @@
       if (presentesEl) answers.presentes = presentesEl.value.trim();
       if (contextoOutroEl) answers.contextoOutro = contextoOutroEl.value.trim();
       if (pessoasQualEl) {
-        var rawPessoas = String(pessoasQualEl.value || '').trim();
-        if (rawPessoas) {
-          answers.pessoas = rawPessoas;
-          calcHydrated = false;
-        } else {
-          delete answers.pessoas;
-          calcHydrated = false;
-        }
+        applyPessoasFromSummary(String(pessoasQualEl.value || '').trim());
+        calcHydrated = false;
       }
       renderSummary();
       persistDraft();
@@ -835,6 +1042,7 @@
   wireQualify();
   restoreChipSelections();
   wireFields();
+  wireSummaryEdits();
   renderSummary();
   renderOffer();
 
