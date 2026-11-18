@@ -118,6 +118,7 @@ let propostaAtivaId = null;
 let planoEscolhidoId = null;
 let modoNovaProposta = false;
 let estadoInicialFormulario = null;
+let modalGerarPropostaId = null;
 
 /**
  * Ordem: menor → maior tier.
@@ -1375,6 +1376,8 @@ function carregarPropostaSelecionada() {
   propostaAtivaId = proposta.id;
   modoNovaProposta = false;
   planoEscolhidoId = proposta.planoSelecionadoId || proposta.resumo?.planoId || null;
+  const campoCliente = document.getElementById('field-cliente');
+  if (campoCliente && proposta.clientName) campoCliente.value = proposta.clientName;
   aplicarEstadoFormulario(proposta.estado);
   document.dispatchEvent(
     new CustomEvent('aya:plano-selecionado', { detail: { planId: planoEscolhidoId } }),
@@ -1922,10 +1925,22 @@ function abrirOrcamento(dados) {
 }
 
 function nomeClienteSugerido() {
-  const casa = nomeCasaDaApresentacao();
-  if (casa) return casa;
   const ativa = propostasSalvas.find((p) => p.id === propostaAtivaId);
-  return ativa?.clientName?.trim() || '';
+  const nomeSalvo = ativa?.clientName?.trim() || '';
+  if (nomeSalvo) return nomeSalvo;
+  return nomeCasaDaApresentacao();
+}
+
+function alinharModalGerarAProposta(cliente, responsavel) {
+  const idAtual = propostaAtivaId || '';
+  cliente.value = nomeClienteSugerido();
+  if (modalGerarPropostaId === idAtual) return;
+  responsavel.value = '';
+  const observacao = document.getElementById('input-gerar-observacao');
+  if (observacao) observacao.value = '';
+  const isentar = document.getElementById('check-isentar-licenca');
+  if (isentar) isentar.checked = false;
+  modalGerarPropostaId = idAtual;
 }
 
 function abrirModalGerarProposta() {
@@ -1936,7 +1951,7 @@ function abrirModalGerarProposta() {
   const nome = document.getElementById('input-vendedor-nome');
   const contato = document.getElementById('input-vendedor-contato');
   if (!modal || !cliente || !responsavel || !nome || !contato) return;
-  if (!cliente.value) cliente.value = nomeClienteSugerido();
+  alinharModalGerarAProposta(cliente, responsavel);
   const guardado = lerVendedorGuardado();
   if (guardado) {
     if (!nome.value) nome.value = guardado.nome || '';
