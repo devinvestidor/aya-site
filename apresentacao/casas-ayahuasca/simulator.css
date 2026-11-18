@@ -972,3 +972,60 @@
   filter: none;
 }
 
+.gerar-proposta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin-top: 1.75rem;
+  padding: 1rem 1.1rem;
+  background: var(--bg-elevated);
+  border: 1px solid rgba(196, 163, 90, 0.35);
+  border-radius: var(--radius);
+}
+
+.gerar-proposta__flag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.85rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  cursor: pointer;
+}
+
+.gerar-proposta__flag input {
+  width: 0.85rem;
+  height: 0.85rem;
+  margin: 0;
+  accent-color: #c4a35a;
+}
+
+.gerar-proposta__copy h3 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+.gerar-proposta__copy p {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.gerar-proposta__erro {
+  flex-basis: 100%;
+  margin: 0;
+}
+
+.modal .field + .field {
+  margin-top: 0.75rem;
+}
+
+.modal textarea.field__input {
+  min-height: 4.2rem;
+  resize: vertical;
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+

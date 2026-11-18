@@ -1283,6 +1283,12 @@ function atualizarBotaoNovaSalvar() {
   if (!btn) return;
   const embutido = Boolean(document.getElementById('deck-sim'));
   const nomeCasa = nomeCasaDaApresentacao();
+  const criandoProposta = embutido && modoNovaProposta && !propostaAtivaId;
+  if (criandoProposta) {
+    btn.hidden = true;
+    return;
+  }
+  btn.hidden = false;
   const podeSalvarRapido = embutido && nomeCasa.length >= 2 && !propostaAtivaId;
 
   if (podeSalvarRapido) {
@@ -1369,10 +1375,10 @@ function carregarPropostaSelecionada() {
   propostaAtivaId = proposta.id;
   modoNovaProposta = false;
   planoEscolhidoId = proposta.planoSelecionadoId || proposta.resumo?.planoId || null;
+  aplicarEstadoFormulario(proposta.estado);
   document.dispatchEvent(
     new CustomEvent('aya:plano-selecionado', { detail: { planId: planoEscolhidoId } }),
   );
-  aplicarEstadoFormulario(proposta.estado);
   atualizarPainelPropostas();
 }
 
@@ -1575,6 +1581,7 @@ function criarNovaProposta() {
   if (nomePropostaEl) nomePropostaEl.value = '';
 
   aplicarSelectCreditos(new Set());
+  document.getElementById('creditos-artes-select')?.dispatchEvent(new Event('change', { bubbles: true }));
 
   fecharModalSalvarProposta();
   renderCards();
@@ -1582,6 +1589,486 @@ function criarNovaProposta() {
   atualizarPainelPropostas();
   if (nomePropostaEl) nomePropostaEl.focus();
   else trabalhosEl?.focus();
+}
+
+const VENDEDOR_STORAGE_KEY = 'aya.orcamento.vendedor.v1';
+
+function escaparHtml(valor) {
+  return String(valor ?? '')
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function dataCurta(data) {
+  const meses = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez'];
+  return `${data.getDate()} ${meses[data.getMonth()]} ${data.getFullYear()}`;
+}
+
+function dataArquivo(data) {
+  const dia = String(data.getDate()).padStart(2, '0');
+  const mes = String(data.getMonth() + 1).padStart(2, '0');
+  return `${dia}-${mes}-${data.getFullYear()}`;
+}
+
+function slugNomeArquivo(texto) {
+  return String(texto || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+}
+
+function lerVendedorGuardado() {
+  try {
+    const bruto = sessionStorage.getItem(VENDEDOR_STORAGE_KEY);
+    return bruto ? JSON.parse(bruto) : null;
+  } catch {
+    return null;
+  }
+}
+
+function mostrarErroGerar(mensagem) {
+  const erro = document.getElementById('gerar-proposta-erro');
+  if (!erro) return;
+  erro.hidden = !mensagem;
+  erro.textContent = mensagem || '';
+}
+
+function pacoteArtesSelecionado(plusIds) {
+  const id = plusIds.find((chave) => PLUS_CATALOG[chave]);
+  if (!id) return null;
+  return { id, ...PLUS_CATALOG[id] };
+}
+
+function textoArtes(pacote) {
+  if (!pacote) return '5 artes de IA por mês';
+  const total = pacote.clientLabel.match(/\((\d+)\s+no total\)/);
+  if (total) return `${total[1]} artes de IA por mês`;
+  return pacote.clientLabel;
+}
+
+function textoMovimentacao(receita, valorPlano) {
+  const pct = calcularPercentual(valorPlano, receita.min, receita.max);
+  if (!pct || receita.max <= 0) return '';
+  const menor = parseFloat(pct.min);
+  const maior = parseFloat(pct.max);
+  const unico = pct.modo === 'teto' || Math.abs(menor - maior) < 0.05;
+  const pctTxt = unico
+    ? `${formatPercentPtBR(menor)}%`
+    : `${formatPercentPtBR(Math.min(menor, maior))}% a ${formatPercentPtBR(Math.max(menor, maior))}%`;
+  if (receita.min <= 0 || Math.abs(receita.min - receita.max) < 0.01) {
+    const verbo = receita.min <= 0 ? 'até' : 'cerca de';
+    return `Você movimenta ${verbo} <b>${fmt.format(receita.max)}/mês</b> — este plano representa apenas <b>${pctTxt}</b> da sua operação.`;
+  }
+  return `Você movimenta entre <b>${fmt.format(receita.min)}</b> e <b>${fmt.format(receita.max)}/mês</b> — este plano representa apenas <b>${pctTxt}</b> da sua operação.`;
+}
+
+function coletarDadosOrcamento(vendedor) {
+  const estado = coletarEstadoFormulario();
+  const participantes = participantesPorMes(estado.trabalhos, estado.pessoasPorTrabalho);
+  const recomendado = planoRecomendado(participantes, estado.mensalistas, estado.plusIds);
+  const plan = planoEmFoco(recomendado.plan);
+  const cotacao = cotarPlano(plan, participantes, estado.mensalistas, estado.plusIds);
+  const receitaDet = receitaTotalDetalhado({
+    trabalhos: estado.trabalhos,
+    media: estado.pessoasPorTrabalho,
+    mensalistas: estado.mensalistas,
+    valorMensalista: estado.valorMensalista,
+    valorMin: estado.valorMinParticipante,
+    valorMax: estado.valorMaxParticipante,
+    taxaPresenca: estado.taxaPresencaPct,
+  });
+  const hoje = new Date();
+  const validade = new Date(hoje);
+  validade.setDate(validade.getDate() + 20);
+  const pacote = pacoteArtesSelecionado(estado.plusIds);
+  const regra = regraMensalistasDoPlano(plan);
+  const casa = nomeCasaDaApresentacao();
+  const ativa = propostasSalvas.find((p) => p.id === propostaAtivaId);
+  const clienteInformado = typeof vendedor.cliente === 'string' ? vendedor.cliente.trim() : '';
+  const responsavelInformado = typeof vendedor.responsavel === 'string' ? vendedor.responsavel.trim() : '';
+  const cliente = clienteInformado || casa || ativa?.clientName?.trim() || '';
+  const nomeArquivo = `orcamento-portal-luar-${dataArquivo(hoje)}-${slugNomeArquivo(cliente) || 'cliente'}`;
+  return {
+    cliente,
+    arquivo: nomeArquivo,
+    responsavel: responsavelInformado,
+    vendedor: vendedor.nome,
+    contato: vendedor.contato,
+    emitido: dataCurta(hoje),
+    validoAte: dataCurta(validade),
+    plano: plan.name,
+    recomendado: plan.id === recomendado.plan.id,
+    descricao: getPlanoDescricao(plan.id),
+    participantesLabel: plan.participantsLabel,
+    participantes,
+    usuarios: plan.maxUsers === Infinity ? 'Ilimitados' : `até ${plan.maxUsers}`,
+    mensalistasLabel: regra.inclusos === Infinity ? 'Ilimitados' : `até ${regra.inclusos}`,
+    mensalistas: estado.mensalistas,
+    base: plan.base,
+    extrasIa: cotacao.extrasIa,
+    total: cotacao.total,
+    licenca: plan.licenca,
+    isentarLicenca: vendedor.isentarLicenca === true,
+    observacao: typeof vendedor.observacao === 'string' ? vendedor.observacao.trim() : '',
+    artes: textoArtes(pacote),
+    pacoteLabel: pacote ? pacote.clientLabel : '',
+    porParticipante: calcularValorPorParticipante(cotacao.total, participantes),
+    movimentacao: textoMovimentacao(receitaParaPercentual(receitaDet), cotacao.total),
+    logo: new URL('../../assets/images/hub/logo-mark.png', window.location.href).href,
+  };
+}
+
+function htmlOrcamento(d) {
+  const e = escaparHtml;
+  const mensalidade = d.extrasIa
+    ? `${fmt.format(d.total)} por mês: ${fmt.format(d.base)} do ${e(d.plano)} e ${fmt.format(d.extrasIa)} dos créditos de IA.`
+    : `${fmt.format(d.total)} por mês (plano ${e(d.plano)}).`;
+  const participantesValor = d.participantes > 0
+    ? `${e(d.participantesLabel)} (${d.participantes})`
+    : e(d.participantesLabel);
+  const mensalistasValor = d.mensalistas > 0
+    ? `${e(d.mensalistasLabel)} (${d.mensalistas})`
+    : e(d.mensalistasLabel);
+  const porPart = d.participantes > 0
+    ? `<div class="per">≈ ${fmtMoedaDuasDecimais.format(d.porParticipante)} por participante</div>`
+    : '';
+  const basePresencas = d.participantes > 0
+    ? `<div class="hint">Com base em ~${d.participantes} presenças/mês</div>`
+    : '';
+  const iaCard = d.extrasIa
+    ? `<div class="ia">Incluído na mensalidade (${fmt.format(d.extrasIa)}/mês):<b>${e(d.pacoteLabel)}</b></div>`
+    : '';
+  const iaPreco = d.extrasIa
+    ? `<div class="hint gold">Inclui ${fmt.format(d.extrasIa)}/mês de créditos de artes IA</div>`
+    : '';
+  const valorLicenca = fmt.format(d.licenca);
+  const ativacao = d.isentarLicenca
+    ? `Licença de <s>${valorLicenca}</s>, isenta nesta proposta.`
+    : `Licença de ${valorLicenca} (única).`;
+  const caixaLicenca = d.isentarLicenca
+    ? `<div class="license"><span>Licença: <s>${valorLicenca}</s> (única)</span><span class="isenta">ISENTA</span></div>`
+    : `<div class="license"><span>Licença: ${valorLicenca} (única)</span></div>`;
+  const somaLicenca = d.isentarLicenca
+    ? `<div><small>Licença única</small><strong>Isenta</strong></div>`
+    : `<div><small>Licença única</small><strong>${valorLicenca}</strong></div>`;
+  const soma = d.extrasIa
+    ? `<div><small>Plano ${e(d.plano)}</small><strong>${fmt.format(d.base)}/mês</strong></div>
+       <div><small>Créditos de IA</small><strong>${fmt.format(d.extrasIa)}/mês</strong></div>
+       <div class="total"><small>Total</small><strong>${fmt.format(d.total)}/mês</strong></div>`
+    : `<div class="total"><small>Plano ${e(d.plano)}</small><strong>${fmt.format(d.total)}/mês</strong></div>
+       ${somaLicenca}`;
+  const blocoObservacao = d.observacao
+    ? `<h3 class="sec sec--obs">Observação</h3><p class="obs">${e(d.observacao)}</p>`
+    : '';
+  const mov = d.movimentacao ? `<div class="share">${d.movimentacao}</div>` : '';
+  const linhaResponsavel = d.responsavel ? `<p class="resp">${e(d.responsavel)}</p>` : '';
+  const linhaResponsavelP2 = d.responsavel ? `<div class="for-resp">${e(d.responsavel)}</div>` : '';
+  const selo = d.recomendado ? 'Recomendado' : 'Escolhido';
+  const tag = d.recomendado ? 'Melhor custo para o seu volume' : 'Escolhido para esta negociação';
+
+  return `<!DOCTYPE html>
+<html lang="pt-BR"><head><meta charset="utf-8" />
+<title>${e(d.arquivo)}</title>
+<style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: "Avenir Next", "Avenir Next LT Pro", Inter, "Segoe UI", Helvetica, Arial, sans-serif; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+.page { width: 210mm; height: 297mm; position: relative; overflow: hidden; break-after: page; }
+.p1 { background: #f6f3ec; color: #1c2433; }
+.head { height: 34mm; background: #0b1220; color: #f4f1ea; display: flex; align-items: center; justify-content: space-between; padding: 0 12mm; }
+.brand { display: flex; align-items: center; gap: 4mm; }
+.brand img { height: 22mm; width: auto; }
+.kicker { color: #e4c06a; font-size: 8.5pt; letter-spacing: 0.22em; font-weight: 700; text-transform: uppercase; }
+.brand h1 { font-size: 16.5pt; margin-top: 1mm; }
+.brand p, .issued { font-size: 8.5pt; color: #b7b1a4; }
+.meta { text-align: right; }
+.until { margin-top: 1mm; font-size: 11pt; font-weight: 700; color: #e4c06a; }
+.body { padding: 8mm 12mm 0; }
+.parties { display: flex; gap: 4mm; }
+.card, .seller { background: #fff; border: 0.3mm solid #e4ddcf; border-radius: 3mm; }
+.card { flex: 1; padding: 4.6mm 4.4mm 5mm; }
+.seller { margin-top: 5mm; border-left: 1.1mm solid #e4c06a; padding: 3.2mm 4.2mm; display: flex; align-items: center; justify-content: space-between; }
+.label { font-size: 7.4pt; letter-spacing: 0.16em; text-transform: uppercase; color: #8a7350; font-weight: 700; }
+.card h2 { font-size: 12.5pt; margin: 1.4mm 0 1.8mm; }
+.resp { font-size: 10pt; font-weight: 600; margin: -0.6mm 0 1.6mm; color: #1c2433; }
+.card p, .lead, .item, .row span { font-size: 9pt; line-height: 1.4; color: #2c3544; }
+.card .vol { font-size: 7.5pt; color: #8a8174; white-space: nowrap; }
+.seller .name { font-size: 13pt; font-weight: 700; }
+.seller .phone { margin-left: 2.4mm; font-size: 9pt; font-weight: 500; color: #5c6572; }
+h3.sec { margin: 7mm 0 2.6mm; font-size: 9pt; letter-spacing: 0.14em; text-transform: uppercase; color: #8a7350; }
+h3.sec--obs { margin-top: 5mm; margin-bottom: 1.6mm; }
+.obs { font-size: 9pt; line-height: 1.4; color: #2c3544; white-space: pre-wrap; }
+.grid { display: grid; grid-template-columns: 1fr 1fr; gap: 3.4mm 8mm; }
+.item { display: flex; gap: 2mm; }
+.tick { color: #8a7350; font-weight: 700; }
+.rows { border-top: 0.25mm solid #e4ddcf; }
+.row { display: grid; grid-template-columns: 32mm 1fr; gap: 3mm; padding: 3.4mm 0; border-bottom: 0.25mm solid #e4ddcf; }
+.row b { font-size: 9pt; }
+.note { margin-top: 7mm; font-size: 8.6pt; color: #5c6572; }
+.foot { position: absolute; left: 0; right: 0; bottom: 0; height: 10mm; background: #0b1220; color: #d9d3c6; display: flex; align-items: center; justify-content: space-between; padding: 0 12mm; font-size: 8pt; }
+.foot b { color: #e4c06a; }
+.p2 { background: radial-gradient(120mm 80mm at 100% 0%, rgba(228,192,106,.14), transparent 60%), #0b1220; color: #f3efe6; padding: 11mm 13mm 10mm; display: flex; flex-direction: column; }
+.p2top { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 5mm; }
+.p2top h2 { font-size: 13pt; margin-top: 0.8mm; }
+.for { font-size: 8pt; color: #b7b1a4; }
+.for-resp { margin-top: 0.4mm; font-size: 8pt; color: #e4c06a; }
+.badge { align-self: flex-start; background: #e4c06a; color: #1a1408; font-size: 7.4pt; font-weight: 800; letter-spacing: 0.16em; text-transform: uppercase; padding: 1.3mm 3.4mm; border-radius: 999px; }
+.scale { font-size: 32pt; line-height: 1; margin: 3mm 0 1.4mm; }
+.tag { font-size: 11pt; }
+.sub { margin-top: 1mm; font-size: 9.2pt; color: #b7b1a4; }
+.lim { display: flex; justify-content: space-between; padding: 2.1mm 0; border-bottom: 0.25mm solid rgba(228,192,106,.28); font-size: 10.5pt; }
+.lim span { color: #c9c3b6; }
+.lim em { font-style: normal; color: #e4c06a; font-weight: 700; }
+.goldbox { margin-top: 5.5mm; background: #161e30; border: 0.35mm solid #e4c06a; border-radius: 3.5mm; padding: 3.6mm 4.5mm; }
+.bar { background: #e4c06a; color: #1a1408; font-weight: 800; font-size: 9.4pt; border-radius: 2mm; padding: 1.8mm 3mm; margin-bottom: 2.6mm; }
+.checks { list-style: none; }
+.checks li { position: relative; padding-left: 5.5mm; font-size: 9.6pt; line-height: 1.45; }
+.checks li::before { content: "✓"; position: absolute; left: 0; color: #e4c06a; }
+.ia { margin-top: 2.4mm; padding-top: 2.2mm; border-top: 0.25mm solid rgba(228,192,106,.45); font-size: 8.6pt; color: #d9d2c4; }
+.ia b { display: block; color: #f7f1e4; font-size: 9.5pt; margin-top: 0.6mm; }
+.sim { margin-top: 5mm; font-size: 8pt; letter-spacing: 0.14em; text-transform: uppercase; color: #b7b1a4; font-weight: 700; }
+.per { margin-top: 1.2mm; font-size: 22pt; font-weight: 800; color: #3dde74; }
+.month { font-size: 18pt; font-weight: 700; margin-top: 0.4mm; }
+.hint { margin-top: 1.2mm; font-size: 9pt; color: #c9c3b6; }
+.hint.gold, .share b { color: #e4c06a; }
+.license, .share, .sum div { background: #121a2b; border-radius: 3mm; }
+.license { margin-top: 4mm; display: flex; align-items: center; justify-content: space-between; padding: 3mm 4mm; font-size: 10.5pt; }
+.row s, .license s { color: #8a8174; text-decoration-thickness: 0.35mm; }
+.license s { color: #9a9386; }
+.isenta { background: #3dde74; color: #06210f; font-weight: 800; font-size: 10pt; letter-spacing: 0.04em; padding: 1.3mm 3.4mm; border-radius: 999px; }
+.share { margin-top: 4mm; border: 0.3mm solid rgba(228,192,106,.4); padding: 3.2mm 4mm; font-size: 9.4pt; line-height: 1.4; }
+.sum { margin-top: auto; padding-top: 4mm; display: grid; grid-template-columns: 1fr 1fr 1.15fr; gap: 2.5mm; }
+.sum div { padding: 2.6mm 3.2mm; }
+.sum small { display: block; color: #b7b1a4; font-size: 7.4pt; letter-spacing: 0.08em; text-transform: uppercase; }
+.sum strong { display: block; margin-top: 0.8mm; font-size: 11pt; }
+.sum .total strong { color: #3dde74; }
+.p2foot { margin-top: 3.5mm; display: flex; justify-content: space-between; font-size: 8pt; color: #9d978c; }
+</style></head><body>
+<section class="page p1">
+  <header class="head">
+    <div class="brand"><img src="${e(d.logo)}" alt="" /><div><div class="kicker">Orçamento</div><h1>Portal do Luar</h1><p>Serviços continuados em nuvem (SaaS)</p></div></div>
+    <div class="meta"><div class="issued">Emitido em ${e(d.emitido)}</div><div class="until">Válido até ${e(d.validoAte)}</div></div>
+  </header>
+  <div class="body">
+    <div class="parties">
+      <article class="card"><div class="label">Prestador</div><h2>Portal do Luar</h2><p>CNPJ 29.557.191/0001-79<br />portaldoluar2@gmail.com</p></article>
+      <article class="card"><div class="label">Cliente</div><h2>${e(d.cliente)}</h2>${linhaResponsavel}<p>Plano ${e(d.plano)}${d.extrasIa ? ' com créditos de IA' : ''}<span class="vol"> - ${d.participantes ? `Simulação com cerca de ${d.participantes} presenças por mês` : 'Simulação com os dados informados'}</span></p></article>
+    </div>
+    <div class="seller"><div class="label">Vendedor</div><div><span class="name">${e(d.vendedor)}</span><span class="phone">${e(d.contato)}</span></div></div>
+    <h3 class="sec">Objeto</h3>
+    <p class="lead">Acesso remoto à plataforma Portal do Luar para a gestão da casa, no plano ${e(d.plano)}${d.extrasIa ? ' e no pacote de créditos desta proposta' : ''}.</p>
+    <h3 class="sec">O que a mensalidade cobre</h3>
+    <div class="grid">
+      <div class="item"><span class="tick">✓</span><span>Acesso ao Portal do Luar: eventos, pessoas, financeiro e páginas da casa</span></div>
+      <div class="item"><span class="tick">✓</span><span>Relatórios, painel e prestação de contas</span></div>
+      <div class="item"><span class="tick">✓</span><span>${e(d.artes)}</span></div>
+      <div class="item"><span class="tick">✓</span><span>Suporte remoto: manuais, ajuda no sistema e WhatsApp</span></div>
+    </div>
+    <h3 class="sec">Condições</h3>
+    <div class="rows">
+      <div class="row"><b>Mensalidade</b><span>${mensalidade}</span></div>
+      <div class="row"><b>Pagamento</b><span>PIX, até o dia 15 do mês seguinte.</span></div>
+      <div class="row"><b>Ativação</b><span>${ativacao}</span></div>
+      <div class="row"><b>Prazo</b><span>12 meses, com renovação automática. Para não renovar, um aviso de 30 dias.</span></div>
+    </div>
+    ${blocoObservacao}
+    <p class="note">Proposta válida por 20 dias. O acesso começa depois do aceite online.</p>
+  </div>
+  <footer class="foot"><span>www.portaldoluar.com.br</span><span>Página 1 de 2 · <b>valores na página seguinte</b></span></footer>
+</section>
+<section class="page p2">
+  <div class="p2top"><div><div class="for">${e(d.cliente)}</div>${linhaResponsavelP2}<h2>O que foi orçado</h2></div><div class="meta"><div class="issued">Emitido em ${e(d.emitido)}</div><div class="until">Válido até ${e(d.validoAte)}</div></div></div>
+  <div class="badge">${e(selo)}</div>
+  <div class="scale">${e(d.plano)}</div>
+  <div class="tag">${e(tag)}</div>
+  <div class="sub">${e(d.descricao)}</div>
+  <div class="limits">
+    <div class="lim"><span>Participantes</span><b>${participantesValor}</b></div>
+    <div class="lim"><span>Usuários</span><b>${e(d.usuarios)}</b></div>
+    <div class="lim"><span>Mensalistas inclusos</span><b>${mensalistasValor}</b></div>
+  </div>
+  <div class="goldbox"><div class="bar">Na prática, você terá:</div>
+    <ul class="checks"><li>Redução de risco jurídico</li><li>Cuidado com a saúde dos participantes</li><li>Assistente IA: dúvidas, medicamentos e artes para redes</li><li>PIX e cartão com baixa automática</li><li>Presença digital profissional</li></ul>
+    ${iaCard}
+  </div>
+  <div class="sim">Simulação de custo</div>
+  ${porPart}
+  <div class="month">${fmt.format(d.total)}/mês</div>
+  ${basePresencas}
+  ${iaPreco}
+  ${caixaLicenca}
+  ${mov}
+  <div class="sum">${soma}</div>
+  <div class="p2foot"><span>www.portaldoluar.com.br</span><span>Página 2 de 2</span></div>
+</section>
+</body></html>`;
+}
+
+function abrirOrcamento(dados) {
+  const janela = window.open('', '_blank');
+  if (!janela) {
+    mostrarErroGerar('O navegador bloqueou a janela da proposta. Permita pop-ups neste site e tente de novo.');
+    return;
+  }
+  janela.document.open();
+  janela.document.write(htmlOrcamento(dados));
+  janela.document.close();
+  janela.focus();
+  setTimeout(() => janela.print(), 300);
+}
+
+function nomeClienteSugerido() {
+  const casa = nomeCasaDaApresentacao();
+  if (casa) return casa;
+  const ativa = propostasSalvas.find((p) => p.id === propostaAtivaId);
+  return ativa?.clientName?.trim() || '';
+}
+
+function abrirModalGerarProposta() {
+  mostrarErroGerar('');
+  const modal = document.getElementById('modal-gerar-proposta');
+  const cliente = document.getElementById('input-gerar-cliente');
+  const responsavel = document.getElementById('input-gerar-responsavel');
+  const nome = document.getElementById('input-vendedor-nome');
+  const contato = document.getElementById('input-vendedor-contato');
+  if (!modal || !cliente || !responsavel || !nome || !contato) return;
+  if (!cliente.value) cliente.value = nomeClienteSugerido();
+  const guardado = lerVendedorGuardado();
+  if (guardado) {
+    if (!nome.value) nome.value = guardado.nome || '';
+    if (!contato.value) contato.value = formatarTelefone(guardado.contato || '');
+  }
+  const erroModal = document.getElementById('gerar-vendedor-erro');
+  if (erroModal) erroModal.hidden = true;
+  modal.classList.add('is-open');
+  modal.setAttribute('aria-hidden', 'false');
+  const foco = [cliente, responsavel, nome].find((campo) => !campo.value.trim()) || contato;
+  foco.focus();
+}
+
+function fecharModalGerarProposta() {
+  const modal = document.getElementById('modal-gerar-proposta');
+  if (!modal) return;
+  modal.classList.remove('is-open');
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+function registrarClienteDaProposta(cliente) {
+  const campo = document.getElementById('field-cliente');
+  if (campo) campo.value = cliente;
+  atualizarPainelPropostas();
+  try {
+    const chave = 'aya.apresentacao.casas-ayahuasca.draft.v1';
+    const bruto = localStorage.getItem(chave);
+    if (!bruto) return;
+    const rascunho = JSON.parse(bruto);
+    if (!rascunho.calc || typeof rascunho.calc !== 'object') rascunho.calc = {};
+    rascunho.calc.cliente = cliente;
+    localStorage.setItem(chave, JSON.stringify(rascunho));
+  } catch {
+    /* o nome segue no campo mesmo sem atualizar o rascunho */
+  }
+}
+
+function digitosTelefone(valor) {
+  return String(valor || '').replace(/\D/g, '').slice(0, 11);
+}
+
+function formatarTelefone(valor) {
+  const d = digitosTelefone(valor);
+  if (d.length === 0) return '';
+  const ddd = d.slice(0, 2);
+  if (d.length <= 2) return `(${ddd}`;
+  if (d[2] === '9') return formatarCelular(ddd, d.slice(2));
+  return formatarFixo(ddd, d.slice(2, 10));
+}
+
+function formatarCelular(ddd, resto) {
+  const nono = resto.slice(0, 1);
+  const meio = resto.slice(1, 5);
+  const fim = resto.slice(5, 9);
+  let texto = `(${ddd}) ${nono}`;
+  if (meio) texto += ` ${meio}`;
+  if (fim) texto += `-${fim}`;
+  return texto;
+}
+
+function formatarFixo(ddd, resto) {
+  const meio = resto.slice(0, 4);
+  const fim = resto.slice(4, 8);
+  let texto = `(${ddd}) ${meio}`;
+  if (fim) texto += `-${fim}`;
+  return texto;
+}
+
+function telefoneCompleto(valor) {
+  const d = digitosTelefone(valor);
+  if (d.length >= 3 && d[2] === '9') return d.length === 11;
+  return d.length === 10;
+}
+
+function aplicarMascaraTelefone(input) {
+  const antes = input.value;
+  const pos = input.selectionStart ?? antes.length;
+  const digitosAntes = antes.slice(0, pos).replace(/\D/g, '').length;
+  const formatado = formatarTelefone(antes);
+  input.value = formatado;
+  let novaPos = 0;
+  let vistos = 0;
+  while (novaPos < formatado.length && vistos < digitosAntes) {
+    if (/\d/.test(formatado[novaPos])) vistos += 1;
+    novaPos += 1;
+  }
+  input.setSelectionRange(novaPos, novaPos);
+}
+
+function mensagemErroGerarProposta(clienteOk, responsavelOk, nomeOk, telefoneOk) {
+  const faltas = [];
+  if (!clienteOk) faltas.push('o nome do cliente');
+  if (!responsavelOk) faltas.push('o responsável');
+  if (!nomeOk) faltas.push('o nome do vendedor');
+  if (!telefoneOk) faltas.push('o telefone do vendedor');
+  if (faltas.length === 1) return `Informe ${faltas[0]}.`;
+  const ultimo = faltas.pop();
+  return `Informe ${faltas.join(', ')} e ${ultimo}.`;
+}
+
+function confirmarGerarProposta() {
+  const cliente = document.getElementById('input-gerar-cliente')?.value?.trim() || '';
+  const responsavel = document.getElementById('input-gerar-responsavel')?.value?.trim() || '';
+  const nome = document.getElementById('input-vendedor-nome')?.value?.trim() || '';
+  const campoTelefone = document.getElementById('input-vendedor-contato');
+  const contato = formatarTelefone(campoTelefone?.value || '');
+  if (campoTelefone) campoTelefone.value = contato;
+  const erroModal = document.getElementById('gerar-vendedor-erro');
+  const clienteOk = cliente.length >= 2;
+  const responsavelOk = responsavel.length >= 2;
+  const nomeOk = nome.length >= 2;
+  const telefoneOk = telefoneCompleto(contato);
+  if (!clienteOk || !responsavelOk || !nomeOk || !telefoneOk) {
+    if (erroModal) {
+      erroModal.hidden = false;
+      erroModal.textContent = mensagemErroGerarProposta(clienteOk, responsavelOk, nomeOk, telefoneOk);
+    }
+    return;
+  }
+  if (erroModal) erroModal.hidden = true;
+  const isentarLicenca = document.getElementById('check-isentar-licenca')?.checked === true;
+  const observacao = document.getElementById('input-gerar-observacao')?.value?.trim() || '';
+  const vendedor = { nome, contato, cliente, responsavel, isentarLicenca, observacao };
+  try {
+    sessionStorage.setItem(VENDEDOR_STORAGE_KEY, JSON.stringify({ nome, contato }));
+  } catch {
+    /* a proposta segue mesmo sem gravar o vendedor */
+  }
+  registrarClienteDaProposta(cliente);
+  mostrarErroGerar('');
+  fecharModalGerarProposta();
+  abrirOrcamento(coletarDadosOrcamento(vendedor));
 }
 
 function init() {
@@ -1624,6 +2111,14 @@ function init() {
   }
   const btnEnviarFechamento = document.getElementById('btn-enviar-fechamento');
   if (btnEnviarFechamento) btnEnviarFechamento.addEventListener('click', enviarFechamentoAtual);
+  const telefoneVendedor = document.getElementById('input-vendedor-contato');
+  if (telefoneVendedor) telefoneVendedor.addEventListener('input', () => aplicarMascaraTelefone(telefoneVendedor));
+  const btnGerar = document.getElementById('btn-gerar-proposta');
+  if (btnGerar) btnGerar.addEventListener('click', abrirModalGerarProposta);
+  const btnCancelarGerar = document.getElementById('btn-cancelar-gerar');
+  if (btnCancelarGerar) btnCancelarGerar.addEventListener('click', fecharModalGerarProposta);
+  const btnConfirmarGerar = document.getElementById('btn-confirmar-gerar');
+  if (btnConfirmarGerar) btnConfirmarGerar.addEventListener('click', confirmarGerarProposta);
   const btnCancelarSalvar = document.getElementById('btn-cancelar-salvar');
   if (btnCancelarSalvar) btnCancelarSalvar.addEventListener('click', fecharModalSalvarProposta);
   const btnConfirmarSalvar = document.getElementById('btn-confirmar-salvar');
@@ -1673,10 +2168,18 @@ function init() {
       if (event.target === modal) fecharModalSalvarProposta();
     });
   }
+  const modalGerar = document.getElementById('modal-gerar-proposta');
+  if (modalGerar) {
+    modalGerar.addEventListener('click', (event) => {
+      if (event.target === modalGerar) fecharModalGerarProposta();
+    });
+  }
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
     const modalEl = document.getElementById('modal-salvar-proposta');
     if (modalEl?.classList.contains('is-open')) fecharModalSalvarProposta();
+    const modalGerar = document.getElementById('modal-gerar-proposta');
+    if (modalGerar?.classList.contains('is-open')) fecharModalGerarProposta();
   });
 
   setupMoneyField('valor-participante-min');

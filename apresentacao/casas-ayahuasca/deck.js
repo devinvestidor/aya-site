@@ -132,7 +132,12 @@
     refreshSim();
   }
 
+  function creditosArtesEl() {
+    return document.getElementById('creditos-artes-select');
+  }
+
   function collectCalcDraft() {
+    var creditosEl = creditosArtesEl();
     return {
       cliente: clienteEl ? clienteEl.value : '',
       trabalhos: trabalhosEl ? trabalhosEl.value : '',
@@ -142,6 +147,7 @@
       mensalistasQtd: mensalistasQtdEl ? mensalistasQtdEl.value : '',
       valorMensalista: valorMensEl ? valorMensEl.value : '',
       taxaPresenca: taxaEl ? taxaEl.value : '70%',
+      creditosArtes: creditosEl ? creditosEl.value : '',
       planoSelecionadoId: planoSelecionadoId,
       propostaAtivaId: propostaAtivaId,
     };
@@ -165,6 +171,8 @@
     if (taxaEl && typeof calc.taxaPresenca === 'string' && calc.taxaPresenca) {
       taxaEl.value = calc.taxaPresenca;
     }
+    var creditosEl = creditosArtesEl();
+    if (creditosEl && typeof calc.creditosArtes === 'string') creditosEl.value = calc.creditosArtes;
     if (calc.planoSelecionadoId) planoSelecionadoId = calc.planoSelecionadoId;
     var apiPlano = sim();
     if (apiPlano && typeof apiPlano.setPlanoEscolhido === 'function') {
@@ -965,6 +973,14 @@
         if (el) el.addEventListener('input', onCalcField);
       }
     );
+    var creditosEl = creditosArtesEl();
+    if (creditosEl) creditosEl.addEventListener('change', onCalcField);
+
+    document.addEventListener('aya:proposta-salva', function () {
+      var api = sim();
+      if (api && api.getPropostaAtivaId) propostaAtivaId = api.getPropostaAtivaId();
+      persistDraft();
+    });
 
     document.addEventListener('aya:plano-selecionado', function (ev) {
       if (!ev || !ev.detail) return;

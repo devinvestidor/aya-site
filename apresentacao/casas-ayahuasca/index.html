@@ -811,7 +811,52 @@
 
             <section class="cards" id="cards-root" aria-label="Comparação de planos"></section>
 
+            <section class="gerar-proposta" aria-labelledby="gerar-proposta-titulo">
+              <div class="gerar-proposta__copy">
+                <h3 id="gerar-proposta-titulo">Gerar proposta</h3>
+                <p>Monta o orçamento com o plano em foco e os dados deste cálculo.</p>
+              </div>
+              <button type="button" id="btn-gerar-proposta" class="btn-proposta btn-proposta--solid">Gerar proposta</button>
+              <p class="deck__form-error gerar-proposta__erro" id="gerar-proposta-erro" hidden role="alert"></p>
+            </section>
+
             <button type="button" id="btn-salvar-proposta" hidden aria-hidden="true" tabindex="-1">Salvar proposta</button>
+
+            <div class="modal-backdrop" id="modal-gerar-proposta" aria-hidden="true">
+              <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-gerar-titulo">
+                <h3 class="modal__title" id="modal-gerar-titulo">Gerar proposta</h3>
+                <p class="modal__text">O orçamento usa o plano em foco e os números já preenchidos.</p>
+                <label class="field">
+                  <span class="field__label">Nome do cliente</span>
+                  <input type="text" id="input-gerar-cliente" class="field__input" autocomplete="organization" />
+                </label>
+                <label class="field">
+                  <span class="field__label">Responsável</span>
+                  <input type="text" id="input-gerar-responsavel" class="field__input" autocomplete="name" />
+                </label>
+                <label class="field">
+                  <span class="field__label">Nome do vendedor</span>
+                  <input type="text" id="input-vendedor-nome" class="field__input" autocomplete="name" />
+                </label>
+                <label class="field">
+                  <span class="field__label">Telefone</span>
+                  <input type="tel" id="input-vendedor-contato" class="field__input" autocomplete="tel" inputmode="numeric" />
+                </label>
+                <label class="field">
+                  <span class="field__label">Observação (opcional)</span>
+                  <textarea id="input-gerar-observacao" class="field__input" rows="3" maxlength="280"></textarea>
+                </label>
+                <label class="gerar-proposta__flag">
+                  <input type="checkbox" id="check-isentar-licenca" />
+                  <span>Isentar a licença</span>
+                </label>
+                <p class="deck__form-error" id="gerar-vendedor-erro" hidden role="alert"></p>
+                <div class="modal__actions">
+                  <button type="button" class="propostas-topo__btn propostas-topo__btn--ghost" id="btn-cancelar-gerar">Cancelar</button>
+                  <button type="button" class="propostas-topo__btn" id="btn-confirmar-gerar">Gerar</button>
+                </div>
+              </div>
+            </div>
 
             <div class="modal-backdrop" id="modal-salvar-proposta" aria-hidden="true">
               <div class="modal">
