@@ -16,6 +16,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="../styles.css" />
+  <link rel="stylesheet" href="../hub.css" />
 </head>
 
 <body class="solucao-page-root hub-page-root">
@@ -103,7 +104,7 @@
           <div class="hub-path__body">
             <h2 class="hub-path__title">Eventos Conscientes</h2>
             <p class="hub-path__text">
-              Para terapeutas, facilitadores e espaços que promovem experiências de bem-estar e conexão. Com foco em
+              Para terapeutas · facilitadores · organizadores de trilhas · espaços que promovem experiências de bem-estar e conexão. Com foco em
               <strong>organização</strong> e <strong>praticidade</strong>.
             </p>
             <ul class="hub-path__chips hub-path__chips--teal">
@@ -145,26 +146,7 @@
   <footer class="hub-footer">
     <p class="hub-footer__copy">Apresentação comercial · Portal do Luar</p>
   </footer>
-  <script>
-    (function () {
-      if (window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-      var links = document.querySelectorAll('.hub-path');
-      for (var i = 0; i < links.length; i++) {
-        links[i].addEventListener('click', function (e) {
-          var link = e.currentTarget;
-          if (e.defaultPrevented) return;
-          if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
-          if (link.classList.contains('is-clicking')) return;
-          e.preventDefault();
-          link.classList.add('is-clicking');
-          var href = link.href;
-          window.setTimeout(function () {
-            window.location.href = href;
-          }, 220);
-        });
-      }
-    })();
-  </script>
+  <script src="../hub.js"></script>
 </body>
 
 </html>
